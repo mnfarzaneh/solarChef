@@ -1,10 +1,13 @@
-(photo_2026-06-23_19-33-30.jpg)
-(photo_2026-06-23_19-33-25.jpg)
 # Solar Chef 🍳
 
 Solar Chef is a modern Android recipe application built with **Kotlin** and **Jetpack Compose**.
 
 The application allows users to browse recipes, create their own recipes, edit existing recipes, and store them locally on the device. One of the key features of Solar Chef is its smart ingredient scaling system, which helps users adapt recipes to the ingredients they already have at home.
+
+### Home Screen
+![Home](photo_2026-06-23_19-33-30.jpg)
+### cooking Screen
+![Home](photo_2026-06-23_19-33-25.jpg)
 
 ---
 
