@@ -196,8 +196,19 @@ fun CookingScreen(
                         onClick  = { viewModel.selectTab(1) },
                         text = {
                             Text(
-                                "طرز تهیه",
+                                "وسایل لازم",
                                 color = if (uiState.selectedTab == 1) CkAccentOrange else CkTextLight,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    )
+                    Tab(
+                        selected = uiState.selectedTab == 2,
+                        onClick  = { viewModel.selectTab(2) },
+                        text = {
+                            Text(
+                                "طرز تهیه",
+                                color = if (uiState.selectedTab == 2) CkAccentOrange else CkTextLight,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -205,18 +216,30 @@ fun CookingScreen(
                 }
 
                 // محتوا
-                if (uiState.selectedTab == 0) {
-                    CkIngredientsSection(
-                        ingredients = recipe.ingredients,
-                        servingsMultiplier = uiState.servings.toFloat() /
-                                (recipe.yield.toIntOrNull() ?: 4).toFloat()
-                    )
-                } else {
-                    CkStepsSection(
-                        steps = recipe.steps,
-                        completedSteps = uiState.completedSteps,
-                        onStepToggle = { viewModel.toggleStep(it) }
-                    )
+                when (uiState.selectedTab) {
+
+                    0 -> {
+                        CkIngredientsSection(
+                            ingredients = recipe.ingredients,
+                            servingsMultiplier =
+                                uiState.servings.toFloat() /
+                                        (recipe.yield.toIntOrNull() ?: 4).toFloat()
+                        )
+                    }
+
+                    1 -> {
+                        CkEquipmentSection(
+                            equipment = recipe.equipment
+                        )
+                    }
+
+                    2 -> {
+                        CkStepsSection(
+                            steps = recipe.steps,
+                            completedSteps = uiState.completedSteps,
+                            onStepToggle = { viewModel.toggleStep(it) }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(60.dp))
@@ -230,10 +253,6 @@ fun CookingScreen(
                 .padding(top = 52.dp, start = 16.dp, end = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            GlassIconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-                    tint = CkTextDark, modifier = Modifier.size(20.dp))
-            }
             GlassIconButton(
                 onClick = {
                     while (navController.currentDestination?.route != NavGraph.Screen.Oven.route) {
@@ -242,6 +261,14 @@ fun CookingScreen(
                 }
             ) {
                 Icon(Icons.Default.Close, contentDescription = "Close",
+                    tint = CkTextDark, modifier = Modifier.size(20.dp))
+            }
+            GlassIconButton(
+                onClick = {
+                    navController.popBackStack()
+                }
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back",
                     tint = CkTextDark, modifier = Modifier.size(20.dp))
             }
         }
@@ -438,6 +465,39 @@ fun CkStepsSection(
                 )
             }
             if (index < steps.lastIndex) Spacer(modifier = Modifier.height(4.dp))
+        }
+    }
+}
+@Composable
+fun CkEquipmentSection(
+    equipment: List<String>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ) {
+
+        equipment.forEach { item ->
+
+            Row(
+                modifier = Modifier.padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = "🔸",
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = item,
+                    color = CkTextDark,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }

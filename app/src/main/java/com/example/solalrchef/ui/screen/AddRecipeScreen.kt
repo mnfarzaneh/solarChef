@@ -59,6 +59,7 @@ fun AddRecipeScreen(
     val scrollState = rememberScrollState()
     val isEditMode = editRecipeId != null
 
+
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) navController.popBackStack()
     }
@@ -187,8 +188,10 @@ fun AddRecipeScreen(
                 ARTextField(
                     value = state.title,
                     onValueChange = { viewModel.updateTitle(it) },
-                    label = "عنوان دستور",
-                    placeholder = "مثلاً: کباب کوبیده"
+                    label = "عنوان دستور (الزامی)",
+                    placeholder = "مثلاً: کباب کوبیده",
+                    isError = state.error != null
+
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 ARTextField(
@@ -284,6 +287,53 @@ fun AddRecipeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            ARSection(title = "وسایل لازم") {
+
+                state.equipment.forEachIndexed { index, item ->
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        OutlinedTextField(
+                            value = item,
+                            onValueChange = {
+                                viewModel.updateEquipment(index, it)
+                            },
+                            placeholder = {
+                                Text("مثلاً: فر، همزن، تابه")
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        if (state.equipment.size > 1) {
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            IconButton(
+                                onClick = {
+                                    viewModel.removeEquipment(index)
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                ARAddButton(
+                    text = "افزودن وسیله"
+                ) {
+                    viewModel.addEquipment()
+                }
+            }
+
             // ── مراحل پخت ────────────────────────────────
             ARSection(title = "مراحل پخت") {
                 state.steps.forEachIndexed { index, step ->
@@ -376,7 +426,8 @@ fun ARTextField(
     placeholder: String = "",
     modifier: Modifier = Modifier,
     minLines: Int = 1,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isError: Boolean = false,
 ) {
     OutlinedTextField(
         value = value,
@@ -386,15 +437,24 @@ fun ARTextField(
         modifier = modifier.fillMaxWidth(),
         minLines = minLines,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        isError = isError,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor   = ARAccentOrange,
             unfocusedBorderColor = ARDivider,
             focusedTextColor     = ARTextDark,
             unfocusedTextColor   = ARTextDark,
-            cursorColor          = ARAccentOrange
+            cursorColor          = ARAccentOrange,
         ),
         shape = RoundedCornerShape(12.dp)
     )
+    if (isError) {
+        Text(
+            text = "عنوان دستور الزامی است",
+            color = MaterialTheme.colorScheme.error,
+            fontSize = 12.sp
+        )
+    }
+
 }
 
 // ─── انتخاب سطح سختی ─────────────────────────────────────

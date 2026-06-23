@@ -27,5 +27,7 @@ data class Recipe(
     val calories: Int = 360,
     val isFavorite: Boolean = false,   // ← اضافه شد
     val ingredients: List<Ingredient> = emptyList(),
-    val steps: List<CookingStep> = emptyList()
+    val steps: List<CookingStep> = emptyList(),
+    val equipment: List<String> = emptyList()  // ← جدید
+
 )

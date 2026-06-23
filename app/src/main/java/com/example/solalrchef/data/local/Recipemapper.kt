@@ -24,8 +24,25 @@ fun RecipeEntity.toRecipe(): Recipe {
         difficulty   = difficulty,
         rating       = rating,
         ingredients  = parseIngredients(ingredientsJson),
-        steps        = parseSteps(stepsJson)
+        steps        = parseSteps(stepsJson),
+        equipment    = parseEquipment(equipmentJson)
+
+
     )
+}
+
+private fun equipmentToJson(equipment: List<String>): String {
+    val array = JSONArray()
+    equipment.forEach { array.put(it) }
+    return array.toString()
+}
+
+private fun parseEquipment(json: String): List<String> {
+    if (json.isEmpty()) return emptyList()
+    return try {
+        val array = JSONArray(json)
+        (0 until array.length()).map { array.getString(it) }
+    } catch (e: Exception) { emptyList() }
 }
 
 fun Recipe.toEntity(): RecipeEntity {
@@ -43,7 +60,8 @@ fun Recipe.toEntity(): RecipeEntity {
         difficulty       = difficulty,
         rating           = rating,
         ingredientsJson  = ingredientsToJson(ingredients),
-        stepsJson        = stepsToJson(steps)
+        stepsJson        = stepsToJson(steps),
+        equipmentJson    = equipmentToJson(equipment)
     )
 }
 
@@ -93,3 +111,5 @@ private fun parseSteps(json: String): List<CookingStep> {
         }
     } catch (e: Exception) { emptyList() }
 }
+
+

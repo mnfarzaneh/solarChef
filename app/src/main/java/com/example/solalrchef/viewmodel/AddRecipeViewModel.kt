@@ -32,7 +32,8 @@ data class AddRecipeUiState(
     val steps: List<CookingStep> = listOf(CookingStep("")),
     val isSaved: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val equipment: List<String> = listOf("")
 )
 
 @HiltViewModel
@@ -71,7 +72,8 @@ class AddRecipeViewModel @Inject constructor(
                     imageUri    = if (it.imagePath.isNotEmpty()) Uri.parse(it.imagePath) else null,
                     ingredients = it.ingredients.ifEmpty { listOf(Ingredient("", "", "")) },
                     steps       = it.steps.ifEmpty { listOf(CookingStep("")) },
-                    isLoading   = false
+                    isLoading   = false,
+                    equipment = it.equipment.ifEmpty { listOf("") },
                 )
             }
         }
@@ -93,8 +95,12 @@ class AddRecipeViewModel @Inject constructor(
         }
     }
 
-    fun updateTitle(value: String)       { _uiState.value = _uiState.value.copy(title = value) }
-    fun updateDescription(value: String) { _uiState.value = _uiState.value.copy(description = value) }
+    fun updateTitle(value: String) {
+        _uiState.value = _uiState.value.copy(
+            title = value,
+            error = null
+        )
+    }    fun updateDescription(value: String) { _uiState.value = _uiState.value.copy(description = value) }
     fun updateAuthor(value: String)      { _uiState.value = _uiState.value.copy(author = value) }
     fun updateTotalTime(value: String)   { _uiState.value = _uiState.value.copy(totalTime = value) }
     fun updateCookTime(value: String)    { _uiState.value = _uiState.value.copy(cookTime = value) }
@@ -165,10 +171,34 @@ class AddRecipeViewModel @Inject constructor(
                 difficulty  = state.difficulty,
                 rating      = 5f,
                 ingredients = state.ingredients.filter { it.name.isNotBlank() },
-                steps       = state.steps.filter { it.instruction.isNotBlank() }
+                steps       = state.steps.filter { it.instruction.isNotBlank() },
+                equipment = state.equipment.filter { it.isNotBlank() }
+
             )
             userRepo.saveRecipe(recipe)
             _uiState.value = _uiState.value.copy(isSaved = true)
         }
     }
+    fun updateEquipment(index: Int, value: String) {
+        val list = _uiState.value.equipment.toMutableList()
+        list[index] = value
+        _uiState.value = _uiState.value.copy(equipment = list)
+    }
+
+    fun addEquipment() {
+        val list = _uiState.value.equipment.toMutableList()
+        list.add("")
+        _uiState.value = _uiState.value.copy(equipment = list)
+    }
+
+    fun removeEquipment(index: Int) {
+        if (_uiState.value.equipment.size <= 1) return
+
+        val list = _uiState.value.equipment.toMutableList()
+        list.removeAt(index)
+
+        _uiState.value = _uiState.value.copy(equipment = list)
+    }
+
+
 }

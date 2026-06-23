@@ -25,7 +25,10 @@ object AppModule {
             RecipeDatabase::class.java,
             "solar_chef_db"          // ← همون اسم قبلی تا داده‌ها حفظ بشن
         )
-            .addMigrations(RecipeDatabase.MIGRATION_1_2)
+            .addMigrations(
+                RecipeDatabase.MIGRATION_1_2,
+                RecipeDatabase.MIGRATION_2_3   // ← این رو اضافه کن
+            )
             .build()
     }
 

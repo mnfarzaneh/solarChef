@@ -244,7 +244,7 @@ fun GlassTopBar(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         GlassIconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
+            Icon(Icons.Default.Close, contentDescription = "Close",
                 tint = TextDark, modifier = Modifier.size(20.dp))
         }
         if (scrolledPastHero) {
@@ -257,8 +257,9 @@ fun GlassTopBar(
         } else {
             Spacer(modifier = Modifier.weight(1f))
         }
+
         GlassIconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.Close, contentDescription = "Close",
+            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
                 tint = TextDark, modifier = Modifier.size(20.dp))
         }
     }
@@ -337,6 +338,35 @@ fun GlassMacroCard(label: String, value: String, color: Color, modifier: Modifie
     }
 }
 
+private fun buildRecipeShareText(recipe: Recipe): String {
+    val ingredients = recipe.ingredients.joinToString("\n") {
+        "• ${it.amount} ${it.unit} ${it.name}"
+    }
+
+    val steps = recipe.steps.mapIndexed { index, step ->
+        "${index + 1}. ${step.instruction}"
+    }.joinToString("\n")
+
+    return """
+🍽 ${recipe.title}
+
+📝 توضیحات:
+${recipe.description}
+
+⏱ زمان کل: ${recipe.totalTime}
+🔥 زمان پخت: ${recipe.cookTime}
+👥 تعداد نفرات: ${recipe.yield}
+
+🥕 مواد لازم:
+$ingredients
+
+👨‍🍳 طرز تهیه:
+$steps
+
+📱 ارسال شده از اپ Solar Chef
+    """.trimIndent()
+}
+
 // ─── Action Row — isFavorite و onFavoriteClick اضافه شد ──
 @Composable
 fun GlassActionRow(
@@ -376,7 +406,10 @@ fun GlassActionRow(
             onClick = {
                 val sendIntent = Intent().apply {
                     action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, "${recipe.title}\n${recipe.description}")
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        buildRecipeShareText(recipe)
+                    )
                     type = "text/plain"
                 }
                 context.startActivity(Intent.createChooser(sendIntent, "اشتراک‌گذاری دستور پخت"))

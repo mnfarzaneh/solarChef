@@ -22,5 +22,7 @@ data class RecipeEntity(
     val isFavorite: Boolean = false,   // ← اضافه شد
     // مواد لازم و مراحل به صورت JSON ذخیره میشن
     val ingredientsJson: String,
-    val stepsJson: String
+    val stepsJson: String,
+    val equipmentJson: String = "[]"  // ← جدید
+
 )
