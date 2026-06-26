@@ -29,6 +29,10 @@ object RecipeRepository {
                 Ingredient("370", "گرم", "آب"),
 
                 ),
+            equipment = listOf(
+                "ورزق نسوز آلمانی", "پارو", "فویل آلومینیومی"
+
+            ),
             steps = listOf(
 
                 CookingStep("🥣 آرد نول، آرد کامل، نمک، مخمر و آب را با هم مخلوط کن تا خمیر یکدستی به دست بیاید."),
@@ -86,7 +90,7 @@ object RecipeRepository {
 
         Recipe(
             id = "cake",
-            title = "Cake",
+            title = "کیک اسفنجی",
             image = R.drawable.cakemain,           // ← آیکون روی سولاردام
             detailImage = R.drawable.precake,  // ← عکس صفحه جزئیات
             description =
@@ -148,7 +152,7 @@ object RecipeRepository {
 
         Recipe(
             id = "pizza",
-            title = "Pizza",
+            title = "نان پیتزا",
             image = R.drawable.pizzamain,           // ← آیکون روی سولاردام
             detailImage = R.drawable.prepizza,  // ← عکس صفحه جزئیات
             description =
