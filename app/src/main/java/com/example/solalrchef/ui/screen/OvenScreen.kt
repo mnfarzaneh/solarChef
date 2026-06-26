@@ -1,22 +1,29 @@
-package com.example.solalrchef.ui.screen
+package com.mnfarzaneh.solalrchef.ui.screen
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,12 +38,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -46,30 +57,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.solalrchef.R
-import com.example.solalrchef.ui.navigation.NavGraph
-import com.example.solalrchef.viewmodel.OvenViewModel
+import com.mnfarzaneh.solalrchef.R
+import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
+import com.mnfarzaneh.solalrchef.ui.theme.IranSans
+import com.mnfarzaneh.solalrchef.viewmodel.OvenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.text.TextMeasurer
-import com.example.solalrchef.ui.theme.IranSans
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.remember
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.ripple
 
 
 // تابع کمکی برای رسم متن با outline
@@ -705,13 +702,47 @@ fun OvenScreen(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 52.dp, end = 16.dp)
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(Color(0x663A1700))
-                .clickable { navController.navigate(NavGraph.Screen.MyRecipes.route) },
+                .size(48.dp)
+                .graphicsLayer {
+                    shadowElevation = 18f
+                    shape = CircleShape
+                    clip = true
+
+                    ambientShadowColor = Color(0xFFFF6B35)
+                    spotShadowColor = Color(0xFFFF6B35)
+                }
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0x663A1700),
+                            Color(0x55200000)
+                        )
+                    )
+                )
+                .clickable {
+                    navController.navigate(
+                        NavGraph.Screen.MyRecipes.route
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
-            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Color(0x22FF6B35)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
         }
 
         Box(

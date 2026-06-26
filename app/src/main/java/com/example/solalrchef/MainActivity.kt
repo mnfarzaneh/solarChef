@@ -1,4 +1,4 @@
-package com.example.solalrchef
+package com.mnfarzaneh.solalrchef
 
 import android.os.Build
 import android.os.Bundle
@@ -8,25 +8,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.solalrchef.ui.navigation.NavGraph
-import com.example.solalrchef.ui.screen.OvenScreen
-import com.example.solalrchef.ui.screen.RecipeDetailScreen
-import com.example.solalrchef.ui.screen.CookingScreen
-import androidx.compose.ui.unit.LayoutDirection
-import com.example.solalrchef.ui.screen.AddRecipeScreen
-import com.example.solalrchef.ui.screen.MyRecipesScreen
+import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
+import com.mnfarzaneh.solalrchef.ui.screen.AddRecipeScreen
+import com.mnfarzaneh.solalrchef.ui.screen.CookingScreen
+import com.mnfarzaneh.solalrchef.ui.screen.MyRecipesScreen
+import com.mnfarzaneh.solalrchef.ui.screen.OvenScreen
+import com.mnfarzaneh.solalrchef.ui.screen.RecipeDetailScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

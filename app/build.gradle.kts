@@ -7,23 +7,24 @@ plugins {
 }
 
 android {
-    namespace = "com.example.solalrchef"
+    namespace = "com.mnfarzaneh.solalrchef"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.solalrchef"
+        applicationId = "com.mnfarzaneh.solalrchef"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

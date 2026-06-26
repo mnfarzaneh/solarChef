@@ -1,4 +1,4 @@
-package com.example.solalrchef.model
+package com.mnfarzaneh.solalrchef.model
 
 data class FoodItem(
     val id: String,

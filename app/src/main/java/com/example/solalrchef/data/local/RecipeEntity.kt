@@ -1,4 +1,4 @@
-package com.example.solalrchef.data.local
+package com.mnfarzaneh.solalrchef.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

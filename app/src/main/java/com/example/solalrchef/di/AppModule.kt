@@ -1,10 +1,10 @@
-package com.example.solalrchef.di
+package com.mnfarzaneh.solalrchef.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.solalrchef.data.UserRecipeRepository
-import com.example.solalrchef.data.local.RecipeDao
-import com.example.solalrchef.data.local.RecipeDatabase
+import com.mnfarzaneh.solalrchef.data.UserRecipeRepository
+import com.mnfarzaneh.solalrchef.data.local.RecipeDao
+import com.mnfarzaneh.solalrchef.data.local.RecipeDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,4 +1,4 @@
-package com.example.solalrchef.model
+package com.mnfarzaneh.solalrchef.model
 
 data class Ingredient(
     val amount: String,   // "12"

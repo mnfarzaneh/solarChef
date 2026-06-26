@@ -1,8 +1,8 @@
-package com.example.solalrchef.data.local
+package com.mnfarzaneh.solalrchef.data.local
 
-import com.example.solalrchef.model.CookingStep
-import com.example.solalrchef.model.Ingredient
-import com.example.solalrchef.model.Recipe
+import com.mnfarzaneh.solalrchef.model.CookingStep
+import com.mnfarzaneh.solalrchef.model.Ingredient
+import com.mnfarzaneh.solalrchef.model.Recipe
 import org.json.JSONArray
 import org.json.JSONObject
 

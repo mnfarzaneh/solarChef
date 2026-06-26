@@ -1,4 +1,4 @@
-package com.example.solalrchef.model
+package com.mnfarzaneh.solalrchef.model
 
 import androidx.compose.ui.unit.DpOffset
 

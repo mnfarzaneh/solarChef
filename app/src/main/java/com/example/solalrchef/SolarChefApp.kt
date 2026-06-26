@@ -1,4 +1,4 @@
-package com.example.solalrchef
+package com.mnfarzaneh.solalrchef
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

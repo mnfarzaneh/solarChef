@@ -1,4 +1,4 @@
-package com.example.solalrchef.ui.navigation
+package com.mnfarzaneh.solalrchef.ui.navigation
 
 class NavGraph {
     sealed class Screen(val route: String) {

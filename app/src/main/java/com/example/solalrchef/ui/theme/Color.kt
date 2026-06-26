@@ -1,4 +1,4 @@
-package com.example.solalrchef.ui.theme
+package com.mnfarzaneh.solalrchef.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

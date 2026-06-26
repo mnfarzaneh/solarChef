@@ -1,4 +1,4 @@
-package com.example.solalrchef.data.local
+package com.mnfarzaneh.solalrchef.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

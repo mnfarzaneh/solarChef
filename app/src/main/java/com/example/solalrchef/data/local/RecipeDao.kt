@@ -1,6 +1,9 @@
-package com.example.solalrchef.data.local
+package com.mnfarzaneh.solalrchef.data.local
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Query
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
