@@ -23,6 +23,7 @@ fun RecipeEntity.toRecipe(): Recipe {
         calories     = calories,
         difficulty   = difficulty,
         rating       = rating,
+        isFavorite       = isFavorite,   // ← این خط اضافه شد
         ingredients  = parseIngredients(ingredientsJson),
         steps        = parseSteps(stepsJson),
         equipment    = parseEquipment(equipmentJson)
@@ -59,6 +60,7 @@ fun Recipe.toEntity(): RecipeEntity {
         calories         = calories,
         difficulty       = difficulty,
         rating           = rating,
+        isFavorite       = isFavorite,   // ← این خط اضافه شد
         ingredientsJson  = ingredientsToJson(ingredients),
         stepsJson        = stepsToJson(steps),
         equipmentJson    = equipmentToJson(equipment)

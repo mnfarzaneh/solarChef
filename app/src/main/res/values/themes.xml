@@ -2,4 +2,20 @@
 <resources>
 
     <style name="Theme.SolalrChef" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+
+        <!-- رنگ پس‌زمینه‌ی splash -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+
+        <!-- لوگوی مرکزی (باید یه drawable باشه، ترجیحاً vector یا png ساده) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/my_icon</item>
+
+        <!-- اگه لوگوت انیمیشن داره (AnimatedVectorDrawable)، این مدت زمانش (میلی‌ثانیه) -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+
+        <!-- بعد از splash، به تم اصلی اپ برمی‌گردیم -->
+        <item name="postSplashScreenTheme">@style/Theme.SolalrChef</item>
+    </style>
+
 </resources>

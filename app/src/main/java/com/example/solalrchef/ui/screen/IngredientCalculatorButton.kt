@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mnfarzaneh.solalrchef.model.Ingredient
+import com.mnfarzaneh.solalrchef.ui.theme.AppText
 import kotlin.math.abs
 
 // ═══════════════════════════════════════════════════════════
@@ -120,7 +121,7 @@ fun IngredientCalculatorButton(onClick: () -> Unit) {
         ) {
             Icon(Icons.Default.Calculate, contentDescription = null,
                 tint = CalcOrange, modifier = Modifier.size(18.dp))
-            Text("ماشین حساب مواد", color = CalcOrange,
+            AppText("ماشین حساب مواد", color = CalcOrange,
                 fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }
     }
@@ -202,9 +203,9 @@ fun IngredientCalculatorSheet(
                             tint = CalcOrange, modifier = Modifier.size(22.dp))
                     }
                     Column {
-                        Text("ماشین حساب مواد", color = CalcTextDark,
+                        AppText("ماشین حساب مواد", color = CalcTextDark,
                             fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                        Text("بر اساس مقدار موجودت حساب کن",
+                        AppText("بر اساس مقدار موجودت حساب کن",
                             color = CalcTextLight, fontSize = 12.sp)
                     }
                 }
@@ -224,7 +225,7 @@ fun IngredientCalculatorSheet(
             // ─── انتخاب ماده با Chip ──────────────────────
             // ══════════════════════════════════════════════
 
-            Text(
+            AppText(
                 "بر اساس کدام ماده حساب کنم؟",
                 color = CalcTextDark, fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -267,7 +268,7 @@ fun IngredientCalculatorSheet(
                                 )
                             }
                             // نام ماده فارسیه، Text معمولی
-                            Text(
+                            AppText(
                                 ing.name,
                                 color = if (isSelected) Color.White else CalcTextDark,
                                 fontSize = 13.sp,
@@ -288,7 +289,7 @@ fun IngredientCalculatorSheet(
 
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
 
-                Text(
+                AppText(
                     "من چقدر ${selectedIngredient?.name ?: "این ماده"} دارم؟",
                     color = CalcTextDark, fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
@@ -310,7 +311,7 @@ fun IngredientCalculatorSheet(
                                     "${ing.amount} ${ing.unit}",
                                     color = CalcTextLight.copy(0.5f), fontSize = 13.sp
                                 )
-                            } ?: Text("مقدار موجود",
+                            } ?: AppText("مقدار موجود",
                                 color = CalcTextLight.copy(0.5f), fontSize = 13.sp)
                         },
                         modifier = Modifier.weight(1f),
@@ -350,7 +351,7 @@ fun IngredientCalculatorSheet(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("مقدار اصلی دستور:", color = CalcTextLight, fontSize = 11.sp)
+                        AppText("مقدار اصلی دستور:", color = CalcTextLight, fontSize = 11.sp)
                         LtrText(
                             "${ing.amount} ${ing.unit}",
                             color = CalcOrange, fontSize = 11.sp,
@@ -362,7 +363,7 @@ fun IngredientCalculatorSheet(
                 // خطا
                 if (newAmountText.isNotEmpty() && newAmountText.toFloatOrNull() == null) {
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text("عدد معتبر وارد کن (مثلاً: 2 یا 1.5)",
+                    AppText("عدد معتبر وارد کن (مثلاً: 2 یا 1.5)",
                         color = Color(0xFFE53935), fontSize = 12.sp)
                 }
             }
@@ -397,25 +398,25 @@ fun IngredientCalculatorSheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text("وعده جدید", color = CalcTextLight, fontSize = 11.sp)
+                                AppText("وعده جدید", color = CalcTextLight, fontSize = 11.sp)
                                 Row(
                                     verticalAlignment = Alignment.Bottom,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text(
+                                    AppText(
                                         formatYield(newYield ?: 0f),
                                         color = CalcGreen,
                                         fontSize = 32.sp,
                                         fontWeight = FontWeight.Bold,
                                         lineHeight = 34.sp
                                     )
-                                    Text(
+                                    AppText(
                                         "وعده",
                                         color = CalcGreen, fontSize = 14.sp,
                                         modifier = Modifier.padding(bottom = 4.dp)
                                     )
                                 }
-                                Text("از $baseYield وعده اصلی",
+                                AppText("از $baseYield وعده اصلی",
                                     color = CalcTextLight, fontSize = 11.sp)
                             }
 
@@ -437,14 +438,14 @@ fun IngredientCalculatorSheet(
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
-                                Text("ضریب تغییر", color = CalcTextLight, fontSize = 10.sp)
+                                AppText("ضریب تغییر", color = CalcTextLight, fontSize = 10.sp)
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    Text("مواد جدید", color = CalcTextDark,
+                    AppText("مواد جدید", color = CalcTextDark,
                         fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -488,7 +489,7 @@ fun IngredientCalculatorSheet(
                                                 )
                                         )
                                         // نام ماده فارسیه، Text معمولی
-                                        Text(
+                                        AppText(
                                             ingredient.name,
                                             color = if (isSelected) CalcOrange else CalcTextDark,
                                             fontSize = 14.sp,
@@ -507,7 +508,7 @@ fun IngredientCalculatorSheet(
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         // مقدار اصلی — LtrText چون عدد + واحد انگلیسی
-                                        Text(
+                                        AppText(
                                             "${ingredient.amount} ${ingredient.unit}",
                                             color = CalcTextLight, fontSize = 12.sp
                                         )
@@ -519,14 +520,14 @@ fun IngredientCalculatorSheet(
                                                 newAmt.toLong().toString()
                                             else String.format("%.1f", newAmt)
 
-                                            Text(
+                                            AppText(
                                                 "$fmt ${ingredient.unit}",
                                                 color = if (isSelected) CalcOrange else CalcGreen,
                                                 fontSize = 14.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         } else {
-                                            Text(
+                                            AppText(
                                                 "${ingredient.amount} ${ingredient.unit}",
                                                 color = CalcTextLight, fontSize = 12.sp
                                             )
@@ -545,7 +546,7 @@ fun IngredientCalculatorSheet(
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
+                    AppText(
                         "⚠️ این محاسبات تقریبی هستن. ممکنه زمان پخت هم تغییر کنه.",
                         color = CalcTextLight, fontSize = 11.sp, lineHeight = 16.sp
                     )

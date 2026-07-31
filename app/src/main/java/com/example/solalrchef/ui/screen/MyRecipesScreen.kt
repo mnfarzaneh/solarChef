@@ -2,6 +2,7 @@ package com.mnfarzaneh.solalrchef.ui.screen
 
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,14 +25,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -55,16 +56,12 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mnfarzaneh.solalrchef.model.Recipe
 import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
+import com.mnfarzaneh.solalrchef.ui.theme.AppText
+import com.mnfarzaneh.solalrchef.ui.theme.GlassColors
 import com.mnfarzaneh.solalrchef.viewmodel.MyRecipesViewModel
 
 // ─── رنگ‌ها ───────────────────────────────────────────────
-private val MRBgLight      = Color(0xFFF5EFE6)
-private val MRGlassCard    = Color(0xAAFFFFFF)
-private val MRGlassWhite   = Color(0xCCFFFFFF)
-private val MRAccentOrange = Color(0xFFFF6B35)
-private val MRTextDark     = Color(0xFF2C1810)
-private val MRTextLight    = Color(0xFF9E7B6A)
-private val MRDivider      = Color(0x33000000)
+
 
 @Composable
 fun MyRecipesScreen(
@@ -78,7 +75,7 @@ fun MyRecipesScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MRBgLight)
+            .background(GlassColors.BgLight)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -89,7 +86,7 @@ fun MyRecipesScreen(
                 // ── حالت خالی ────────────────────────────
                 MREmptyState(
                     onAddClick = {
-                        navController.navigate(NavGraph.Screen.AddRecipe.route)
+                        navController.navigate(NavGraph.Screen.AddRecipe.createRoute())
                     }
                 )
             } else {
@@ -122,55 +119,54 @@ fun MyRecipesScreen(
             }
         }
 
-        // ── دکمه افزودن ثابت پایین ───────────────────────
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, MRBgLight)
-                    )
-                )
-                .padding(20.dp)
-        ) {
-            Button(
-                onClick = { navController.navigate(NavGraph.Screen.AddRecipe.route) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MRAccentOrange),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null,
-                    tint = Color.White, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("افزودن دستور جدید", color = Color.White,
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
-        }
+        // ── دکمه افزودن ───────────────────────
+//        FloatingActionButton(
+//            onClick = {
+//                navController.navigate(NavGraph.Screen.AddRecipe.createRoute())
+//            },
+//            modifier = Modifier
+//                .align(Alignment.TopEnd)
+//                .padding(
+//                    top = 20.dp,
+//                    end = 20.dp
+//                ),
+//            containerColor = GlassColors.AccentOrange,
+//            contentColor = Color.White,
+//            shape = CircleShape
+//        ) {
+//            Icon(
+//                Icons.Default.Add,
+//                contentDescription = "افزودن دستور جدید",
+//                modifier = Modifier.size(24.dp)
+//            )
+//        }
     }
-
     // ── دیالوگ تایید حذف ─────────────────────────────────
     recipeToDelete?.let { recipe ->
         AlertDialog(
             onDismissRequest = { recipeToDelete = null },
-            title = { Text("حذف دستور", color = MRTextDark, fontWeight = FontWeight.Bold) },
-            text = { Text("«${recipe.title}» حذف شود؟", color = MRTextLight) },
+            title = {
+                AppText(
+                    "حذف دستور",
+                    color = GlassColors.TextDark,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = { AppText("«${recipe.title}» حذف شود؟", color = GlassColors.TextLight) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteRecipe(recipe.id)
                     recipeToDelete = null
                 }) {
-                    Text("حذف", color = Color.Red, fontWeight = FontWeight.Bold)
+                    AppText("حذف", color = Color.Red, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recipeToDelete = null }) {
-                    Text("انصراف", color = MRTextLight)
+                    AppText("انصراف", color = GlassColors.TextLight)
                 }
             },
-            containerColor = MRBgLight
+            containerColor = GlassColors.BgLight
         )
     }
 }
@@ -182,25 +178,27 @@ fun MRHeader(navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = statusBarHeight + 8.dp, start = 16.dp,
-                end = 16.dp, bottom = 8.dp),
+            .padding(
+                top = statusBarHeight + 8.dp, start = 16.dp,
+                end = 16.dp, bottom = 8.dp
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MRGlassWhite)
-                .clickable { navController.popBackStack() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-                tint = MRTextDark, modifier = Modifier.size(20.dp))
-        }
+//        Box(
+//            modifier = Modifier
+//                .size(40.dp)
+//                .clip(CircleShape)
+//                .background(GlassColors.GlassWhite)
+//                .clickable { navController.popBackStack() },
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
+//                tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
+//        }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
+        AppText(
             text = "دستورهای من",
-            color = MRTextDark,
+            color = GlassColors.TextDark,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
@@ -215,29 +213,29 @@ fun MREmptyState(onAddClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("🍳", fontSize = 64.sp)
+        AppText("🍳", fontSize = 64.sp)
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
+        AppText(
             text = "هنوز دستوری ندارید",
-            color = MRTextDark,
+            color = GlassColors.TextDark,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
+        AppText(
             text = "اولین دستور خود را اضافه کنید",
-            color = MRTextLight,
+            color = GlassColors.TextLight,
             fontSize = 14.sp
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = onAddClick,
-            colors = ButtonDefaults.buttonColors(containerColor = MRAccentOrange),
+            colors = ButtonDefaults.buttonColors(containerColor = GlassColors.AccentOrange),
             shape = RoundedCornerShape(14.dp)
         ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(6.dp))
-            Text("افزودن دستور", color = Color.White, fontWeight = FontWeight.Bold)
+            AppText("افزودن دستور", color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -253,8 +251,23 @@ fun MRRecipeCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MRGlassCard)
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFFFB74D).copy(alpha = 0.22f),
+                        Color(0xFFFFCC80).copy(alpha = 0.15f),
+                        Color.White.copy(alpha = 0.18f)
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(500f, 500f)
+                )
+            )
+            .border(
+                1.dp,
+                Color.White.copy(alpha = 0.35f),
+                RoundedCornerShape(20.dp)
+            )
             .clickable { onClick() }
     ) {
         Row(
@@ -268,7 +281,9 @@ fun MRRecipeCard(
                 modifier = Modifier
                     .size(72.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MRDivider)
+                    .background(
+                        Color(0xFFFFA726).copy(alpha = 0.15f)
+                    )
             ) {
                 if (recipe.imagePath.isNotEmpty()) {
                     AsyncImage(
@@ -282,7 +297,7 @@ fun MRRecipeCard(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("🍽️", fontSize = 28.sp)
+                        AppText("🍽️", fontSize = 28.sp)
                     }
                 }
             }
@@ -291,18 +306,18 @@ fun MRRecipeCard(
 
             // ── اطلاعات ──────────────────────────────────
             Column(modifier = Modifier.weight(1f)) {
-                Text(
+                AppText(
                     text = recipe.title,
-                    color = MRTextDark,
+                    color = GlassColors.TextDark,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
+                AppText(
                     text = recipe.author,
-                    color = MRAccentOrange,
+                    color = GlassColors.AccentOrange,
                     fontSize = 12.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -321,12 +336,21 @@ fun MRRecipeCard(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(MRAccentOrange.copy(alpha = 0.15f))
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFFFFA726).copy(alpha = 0.20f),
+                                    Color.White.copy(alpha = 0.15f)
+                                )
+                            )
+                        )
                         .clickable { onEdit() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Edit, contentDescription = "ویرایش",
-                        tint = MRAccentOrange, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.Edit, contentDescription = "ویرایش",
+                        tint = GlassColors.AccentOrange, modifier = Modifier.size(16.dp)
+                    )
                 }
                 Box(
                     modifier = Modifier
@@ -336,8 +360,10 @@ fun MRRecipeCard(
                         .clickable { onDelete() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = "حذف",
-                        tint = Color.Red.copy(0.7f), modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.Delete, contentDescription = "حذف",
+                        tint = Color.Red.copy(0.7f), modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
@@ -349,9 +375,9 @@ fun MRChip(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(MRDivider)
+            .background(GlassColors.Divider)
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
-        Text(text, color = MRTextLight, fontSize = 10.sp)
+        AppText(text, color = GlassColors.TextLight, fontSize = 10.sp)
     }
 }

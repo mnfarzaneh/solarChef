@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:name="com.mnfarzaneh.solalrchef.SolarChefApp"
         android:allowBackup="true"
@@ -9,13 +10,13 @@
         android:icon="@drawable/my_icon"
         android:label="@string/app_name"
         android:roundIcon="@drawable/my_icon"
-        android:supportsRtl="true"
+        android:supportsRtl="false"
         android:theme="@style/Theme.SolalrChef">
         <activity
             android:name=".MainActivity"
-            android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.SolalrChef">
+            android:theme="@style/Theme.App.Starting"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

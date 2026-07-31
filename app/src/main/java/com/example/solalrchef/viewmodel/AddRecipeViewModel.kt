@@ -15,7 +15,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
-
+import com.mnfarzaneh.solalrchef.data.remote.RecipeParserApi
+import com.mnfarzaneh.solalrchef.data.remote.ParseRecipeRequest
+import com.mnfarzaneh.solalrchef.util.NetworkMonitor
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import java.io.IOException
 data class AddRecipeUiState(
     val title: String = "",
     val description: String = "",
@@ -31,12 +36,17 @@ data class AddRecipeUiState(
     val isSaved: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val equipment: List<String> = listOf("")
+    val equipment: List<String> = listOf(""),
+    val isParsing: Boolean = false,
+    val parseError: String? = null,
+    val parseSuccess: Boolean = false,
 )
 
 @HiltViewModel
 class AddRecipeViewModel @Inject constructor(
     private val userRepo: UserRecipeRepository,
+    private val recipeParserApi: RecipeParserApi,
+    private val networkMonitor: NetworkMonitor,   // ← جایگزین صدا زدن مستقیم تابع شد
     private val application: Application,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -176,6 +186,76 @@ class AddRecipeViewModel @Inject constructor(
             userRepo.saveRecipe(recipe)
             _uiState.value = _uiState.value.copy(isSaved = true)
         }
+    }
+
+    fun parseRecipeFromText(text: String) {
+        if (text.isBlank()) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isParsing = true, parseError = null)
+
+            // ── قدم اول: چک اتصال کلی اینترنت ──
+            if (!networkMonitor.isConnected()) {
+                _uiState.value = _uiState.value.copy(
+                    isParsing = false,
+                    parseError = "به اینترنت متصل نیستید. لطفاً Wi-Fi یا دیتای موبایل را روشن کنید."
+                )
+                return@launch
+            }
+
+            try {
+                val result = recipeParserApi.parseRecipe(ParseRecipeRequest(text))
+                if (!result.error.isNullOrBlank()) {
+                    _uiState.value = _uiState.value.copy(isParsing = false, parseError = result.error)
+                    return@launch
+                }
+                val current = _uiState.value
+                _uiState.value = current.copy(
+                    title       = result.title.ifBlank { current.title },
+                    description = result.description.ifBlank { current.description },
+                    totalTime   = result.totalTime.ifBlank { current.totalTime },
+                    cookTime    = result.cookTime.ifBlank { current.cookTime },
+                    yield       = result.yield.ifBlank { current.yield },
+                    calories    = result.calories.ifBlank { current.calories },
+                    difficulty  = result.difficulty.ifBlank { current.difficulty },
+                    ingredients = if (result.ingredients.isNotEmpty())
+                        result.ingredients.map { Ingredient(amount = it.amount, unit = it.unit, name = it.name) }
+                    else current.ingredients,
+                    steps = if (result.steps.isNotEmpty())
+                        result.steps.map { CookingStep(it) }
+                    else current.steps,
+                    equipment = if (result.equipment.isNotEmpty()) result.equipment else current.equipment,
+                    isParsing = false,
+                    parseSuccess = true
+                )
+            } catch (e: SocketTimeoutException) {
+                // ── سرور جواب نداد؛ محتمل‌ترین دلیل تو ایران: نیاز به فیلترشکن ──
+                _uiState.value = _uiState.value.copy(
+                    isParsing = false,
+                    parseError = "پاسخی از سرور دریافت نشد. ممکن است نیاز باشد فیلترشکن (VPN) را روشن کنید."
+                )
+            } catch (e: UnknownHostException) {
+                // ── آدرس سرور اصلاً پیدا نشد؛ این‌هم معمولاً یعنی دسترسی مسدوده ──
+                _uiState.value = _uiState.value.copy(
+                    isParsing = false,
+                    parseError = "امکان برقراری ارتباط با سرور نبود. اتصال اینترنت یا فیلترشکن را بررسی کنید."
+                )
+            } catch (e: IOException) {
+                _uiState.value = _uiState.value.copy(
+                    isParsing = false,
+                    parseError = "خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید."
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isParsing = false,
+                    parseError = "خطای غیرمنتظره: ${e.localizedMessage ?: "نامشخص"}"
+                )
+            }
+        }
+    }
+
+    fun clearParseSuccess() {
+        _uiState.value = _uiState.value.copy(parseSuccess = false)
     }
     fun updateEquipment(index: Int, value: String) {
         val list = _uiState.value.equipment.toMutableList()

@@ -61,20 +61,22 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mnfarzaneh.solalrchef.model.Ingredient
 import com.mnfarzaneh.solalrchef.viewmodel.AddRecipeViewModel
-
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.AlertDialog
+import com.mnfarzaneh.solalrchef.ui.theme.AppText
+import com.mnfarzaneh.solalrchef.ui.theme.GlassColors
+import androidx.compose.foundation.layout.navigationBarsPadding
 // ─── رنگ‌ها ───────────────────────────────────────────────
-private val ARBgLight      = Color(0xFFF5EFE6)
-private val ARGlassCard    = Color(0xAAFFFFFF)
-private val ARGlassWhite   = Color(0xCCFFFFFF)
-private val ARAccentOrange = Color(0xFFFF6B35)
-private val ARTextDark     = Color(0xFF2C1810)
-private val ARTextLight    = Color(0xFF9E7B6A)
-private val ARDivider      = Color(0x33000000)
+
 
 @Composable
 fun AddRecipeScreen(
     navController: NavController,
-    editRecipeId: String? = null
+    editRecipeId: String? = null,
+    autoOpenParseDialog: Boolean = false   // ← پارامتر جدید
+
 ) {
     val context = LocalContext.current
     val viewModel: AddRecipeViewModel = hiltViewModel()
@@ -83,6 +85,12 @@ fun AddRecipeScreen(
     val scrollState = rememberScrollState()
     val isEditMode = editRecipeId != null
 
+    LaunchedEffect(state.parseSuccess) {
+        if (state.parseSuccess) {
+            android.widget.Toast.makeText(context, "با موفقیت استخراج شد ✅", android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearParseSuccess()
+        }
+    }
 
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) navController.popBackStack()
@@ -94,7 +102,7 @@ fun AddRecipeScreen(
 
     if (state.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = ARAccentOrange)
+            CircularProgressIndicator(color = GlassColors.AccentOrange)
         }
         return
     }
@@ -102,7 +110,7 @@ fun AddRecipeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ARBgLight)
+            .background(GlassColors.BgLight)
     ) {
         Column(
             modifier = Modifier
@@ -127,21 +135,21 @@ fun AddRecipeScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(ARGlassWhite)
+                        .background(GlassColors.GlassWhite)
                         .clickable { navController.popBackStack() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = ARTextDark,
+                        tint = GlassColors.TextDark,
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
+                AppText(
                     text = if (isEditMode) "ویرایش دستور" else "دستور جدید",
-                    color = ARTextDark,
+                    color = GlassColors.TextDark,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -154,10 +162,10 @@ fun AddRecipeScreen(
                     .height(200.dp)
                     .padding(horizontal = 20.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(ARGlassCard)
+                    .background(GlassColors.GlassCard)
                     .border(
                         width = 2.dp,
-                        color = if (state.imageUri != null) ARAccentOrange else ARDivider,
+                        color = if (state.imageUri != null) GlassColors.AccentOrange else GlassColors.Divider,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .clickable { imagePickerLauncher.launch("image/*") },
@@ -176,7 +184,7 @@ fun AddRecipeScreen(
                             .padding(12.dp)
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(ARAccentOrange),
+                            .background(GlassColors.AccentOrange),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -191,14 +199,14 @@ fun AddRecipeScreen(
                         Icon(
                             Icons.Default.PhotoCamera,
                             contentDescription = null,
-                            tint = ARTextLight,
+                            tint = GlassColors.TextLight,
                             modifier = Modifier.size(40.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("انتخاب عکس", color = ARTextLight, fontSize = 14.sp)
-                        Text(
+                        AppText("انتخاب عکس", color = GlassColors.TextLight, fontSize = 14.sp)
+                        AppText(
                             "از گالری انتخاب کنید",
-                            color = ARTextLight.copy(alpha = 0.6f),
+                            color = GlassColors.TextLight.copy(alpha = 0.6f),
                             fontSize = 12.sp
                         )
                     }
@@ -206,6 +214,15 @@ fun AddRecipeScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+
+            ARSmartParseSection(
+                isParsing = state.isParsing,
+                parseError = state.parseError,
+                onParse = { text -> viewModel.parseRecipeFromText(text) },
+                initiallyOpen = autoOpenParseDialog   // ← این خط اضافه شد
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // ── اطلاعات اصلی ─────────────────────────────
             ARSection(title = "اطلاعات اصلی") {
@@ -299,7 +316,7 @@ fun AddRecipeScreen(
                     )
                     if (index < state.ingredients.lastIndex) {
                         Divider(
-                            color = ARDivider,
+                            color = GlassColors.Divider,
                             thickness = 0.5.dp,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
@@ -326,7 +343,7 @@ fun AddRecipeScreen(
                                 viewModel.updateEquipment(index, it)
                             },
                             placeholder = {
-                                Text("مثلاً: فر، همزن، تابه")
+                                AppText("مثلاً: فر، همزن، تابه")
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -357,6 +374,7 @@ fun AddRecipeScreen(
                     viewModel.addEquipment()
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
             // ── مراحل پخت ────────────────────────────────
             ARSection(title = "مراحل پخت") {
@@ -378,7 +396,7 @@ fun AddRecipeScreen(
 
             state.error?.let { error ->
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
+                AppText(
                     text = error,
                     color = Color.Red,
                     fontSize = 13.sp,
@@ -394,20 +412,20 @@ fun AddRecipeScreen(
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, ARBgLight)
+                        colors = listOf(Color.Transparent, GlassColors.BgLight)
                     )
                 )
-                .padding(20.dp)
+                .padding(50.dp)
         ) {
             Button(
                 onClick = { viewModel.saveRecipe() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ARAccentOrange),
+                colors = ButtonDefaults.buttonColors(containerColor = GlassColors.AccentOrange),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text(
+                AppText(
                     text = if (isEditMode) "ذخیره تغییرات" else "ذخیره دستور",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -416,6 +434,7 @@ fun AddRecipeScreen(
             }
         }
     }
+
 }
 
 // ─── Section ─────────────────────────────────────────────
@@ -426,12 +445,12 @@ fun ARSection(title: String, content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(ARGlassCard)
+            .background(GlassColors.GlassCard)
             .padding(16.dp)
     ) {
-        Text(
+        AppText(
             text = title,
-            color = ARAccentOrange,
+            color = GlassColors.AccentOrange,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp,
@@ -456,23 +475,23 @@ fun ARTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = ARTextLight, fontSize = 12.sp) },
-        placeholder = { Text(placeholder, color = ARTextLight.copy(0.5f), fontSize = 13.sp) },
+        label = { AppText(label, color = GlassColors.TextLight, fontSize = 12.sp) },
+        placeholder = { AppText(placeholder, color = GlassColors.TextLight.copy(0.5f), fontSize = 13.sp) },
         modifier = modifier.fillMaxWidth(),
         minLines = minLines,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         isError = isError,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor   = ARAccentOrange,
-            unfocusedBorderColor = ARDivider,
-            focusedTextColor     = ARTextDark,
-            unfocusedTextColor   = ARTextDark,
-            cursorColor          = ARAccentOrange,
+            focusedBorderColor   = GlassColors.AccentOrange,
+            unfocusedBorderColor = GlassColors.Divider,
+            focusedTextColor     = GlassColors.TextDark,
+            unfocusedTextColor   = GlassColors.TextDark,
+            cursorColor          = GlassColors.AccentOrange,
         ),
         shape = RoundedCornerShape(12.dp)
     )
     if (isError) {
-        Text(
+        AppText(
             text = "عنوان دستور الزامی است",
             color = MaterialTheme.colorScheme.error,
             fontSize = 12.sp
@@ -496,18 +515,18 @@ fun ARDifficultySelector(selected: String, onSelect: (String) -> Unit) {
                     .weight(1f)
                     .height(40.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) ARAccentOrange else Color.Transparent)
+                    .background(if (isSelected) GlassColors.AccentOrange else Color.Transparent)
                     .border(
                         width = 1.dp,
-                        color = if (isSelected) ARAccentOrange else ARDivider,
+                        color = if (isSelected) GlassColors.AccentOrange else GlassColors.Divider,
                         shape = RoundedCornerShape(10.dp)
                     )
                     .clickable { onSelect(option) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
+                AppText(
                     text = option,
-                    color = if (isSelected) Color.White else ARTextLight,
+                    color = if (isSelected) Color.White else GlassColors.TextLight,
                     fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                 )
@@ -532,14 +551,14 @@ fun ARIngredientRow(
         OutlinedTextField(
             value = ingredient.amount,
             onValueChange = { onUpdate(ingredient.copy(amount = it)) },
-            placeholder = { Text("مقدار", color = ARTextLight.copy(0.5f), fontSize = 11.sp) },
+            placeholder = { AppText("مقدار", color = GlassColors.TextLight.copy(0.5f), fontSize = 11.sp) },
             modifier = Modifier.width(60.dp),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor   = ARAccentOrange,
-                unfocusedBorderColor = ARDivider,
-                focusedTextColor     = ARTextDark,
-                unfocusedTextColor   = ARTextDark
+                focusedBorderColor   = GlassColors.AccentOrange,
+                unfocusedBorderColor = GlassColors.Divider,
+                focusedTextColor     = GlassColors.TextDark,
+                unfocusedTextColor   = GlassColors.TextDark
             ),
             shape = RoundedCornerShape(10.dp),
             singleLine = true
@@ -547,13 +566,13 @@ fun ARIngredientRow(
         OutlinedTextField(
             value = ingredient.unit,
             onValueChange = { onUpdate(ingredient.copy(unit = it)) },
-            placeholder = { Text("واحد", color = ARTextLight.copy(0.5f), fontSize = 11.sp) },
+            placeholder = { AppText("واحد", color = GlassColors.TextLight.copy(0.5f), fontSize = 11.sp) },
             modifier = Modifier.width(70.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor   = ARAccentOrange,
-                unfocusedBorderColor = ARDivider,
-                focusedTextColor     = ARTextDark,
-                unfocusedTextColor   = ARTextDark
+                focusedBorderColor   = GlassColors.AccentOrange,
+                unfocusedBorderColor = GlassColors.Divider,
+                focusedTextColor     = GlassColors.TextDark,
+                unfocusedTextColor   = GlassColors.TextDark
             ),
             shape = RoundedCornerShape(10.dp),
             singleLine = true
@@ -561,13 +580,13 @@ fun ARIngredientRow(
         OutlinedTextField(
             value = ingredient.name,
             onValueChange = { onUpdate(ingredient.copy(name = it)) },
-            placeholder = { Text("نام ماده", color = ARTextLight.copy(0.5f), fontSize = 11.sp) },
+            placeholder = { AppText("نام ماده", color = GlassColors.TextLight.copy(0.5f), fontSize = 11.sp) },
             modifier = Modifier.weight(1f),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor   = ARAccentOrange,
-                unfocusedBorderColor = ARDivider,
-                focusedTextColor     = ARTextDark,
-                unfocusedTextColor   = ARTextDark
+                focusedBorderColor   = GlassColors.AccentOrange,
+                unfocusedBorderColor = GlassColors.Divider,
+                focusedTextColor     = GlassColors.TextDark,
+                unfocusedTextColor   = GlassColors.TextDark
             ),
             shape = RoundedCornerShape(10.dp),
             singleLine = true
@@ -610,10 +629,10 @@ fun ARStepRow(
             modifier = Modifier
                 .size(30.dp)
                 .clip(CircleShape)
-                .background(ARAccentOrange),
+                .background(GlassColors.AccentOrange),
             contentAlignment = Alignment.Center
         ) {
-            Text(
+            AppText(
                 "${index + 1}",
                 color = Color.White,
                 fontSize = 13.sp,
@@ -624,19 +643,19 @@ fun ARStepRow(
             value = instruction,
             onValueChange = onUpdate,
             placeholder = {
-                Text(
+                AppText(
                     "مرحله را توضیح دهید...",
-                    color = ARTextLight.copy(0.5f),
+                    color = GlassColors.TextLight.copy(0.5f),
                     fontSize = 13.sp
                 )
             },
             modifier = Modifier.weight(1f),
             minLines = 2,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor   = ARAccentOrange,
-                unfocusedBorderColor = ARDivider,
-                focusedTextColor     = ARTextDark,
-                unfocusedTextColor   = ARTextDark
+                focusedBorderColor   = GlassColors.AccentOrange,
+                unfocusedBorderColor = GlassColors.Divider,
+                focusedTextColor     = GlassColors.TextDark,
+                unfocusedTextColor   = GlassColors.TextDark
             ),
             shape = RoundedCornerShape(12.dp)
         )
@@ -668,7 +687,7 @@ fun ARAddButton(text: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .border(width = 1.dp, color = ARAccentOrange, shape = RoundedCornerShape(10.dp))
+            .border(width = 1.dp, color = GlassColors.AccentOrange, shape = RoundedCornerShape(10.dp))
             .clickable { onClick() }
             .padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.Center,
@@ -677,10 +696,89 @@ fun ARAddButton(text: String, onClick: () -> Unit) {
         Icon(
             Icons.Default.Add,
             contentDescription = null,
-            tint = ARAccentOrange,
+            tint = GlassColors.AccentOrange,
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
-        Text(text, color = ARAccentOrange, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        AppText(text, color = GlassColors.AccentOrange, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
+}
+
+
+
+@Composable
+fun ARSmartParseSection(
+    isParsing: Boolean,
+    parseError: String?,
+    onParse: (String) -> Unit,
+    initiallyOpen: Boolean = false   // ← پارامتر جدید
+
+) {
+    var showDialog by remember { mutableStateOf(initiallyOpen) }   // ← تغییر کرد
+    var pasteText by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(GlassColors.AccentOrange.copy(alpha = 0.12f))
+            .border(1.dp, GlassColors.AccentOrange, RoundedCornerShape(16.dp))
+            .clickable(enabled = !isParsing) { showDialog = true }
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isParsing) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = GlassColors.AccentOrange, strokeWidth = 2.dp)
+                Spacer(Modifier.width(10.dp))
+                AppText("در حال استخراج...", color = GlassColors.AccentOrange, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            } else {
+                AppText("✨", fontSize = 18.sp)
+                Spacer(Modifier.width(8.dp))
+                AppText("استخراج خودکار از متن دستور پخت", color = GlassColors.AccentOrange, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+        }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!isParsing) showDialog = false },
+            title = { AppText("متن دستور پخت را اینجا بگذارید") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = pasteText,
+                        onValueChange = { pasteText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
+                        placeholder = { AppText("متن دستور پخت را کپی و اینجا پیست کنید...") },
+                        minLines = 6
+                    )
+                    parseError?.let {
+                        Spacer(Modifier.height(8.dp))
+                        AppText(it, color = Color.Red, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onParse(pasteText)
+                        showDialog = false
+                        pasteText = ""
+                    },
+                    enabled = pasteText.isNotBlank() && !isParsing,   // ← isParsing هم اضافه شد
+                    colors = ButtonDefaults.buttonColors(containerColor = GlassColors.AccentOrange)
+                ) {
+                    AppText("استخراج")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) { AppText("انصراف") }
+            }
+        )
+    }
+
 }

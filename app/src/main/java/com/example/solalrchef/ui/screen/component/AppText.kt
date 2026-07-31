@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
+import com.mnfarzaneh.solalrchef.ui.theme.AppText
 
 
 // یه فایل جدید: ui/components/AppText.kt
@@ -19,7 +20,7 @@ fun LtrText(
     fontWeight: FontWeight? = null,
     textAlign: TextAlign? = null
 ) {
-    Text(
+    AppText(
         text = text,
         modifier = modifier,
         color = color,

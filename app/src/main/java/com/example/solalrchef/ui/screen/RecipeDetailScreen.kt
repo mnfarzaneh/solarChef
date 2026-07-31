@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,19 +69,13 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mnfarzaneh.solalrchef.model.Recipe
 import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
+import com.mnfarzaneh.solalrchef.ui.theme.AppText
+import com.mnfarzaneh.solalrchef.ui.theme.GlassColors
 import com.mnfarzaneh.solalrchef.viewmodel.RecipeDetailViewModel
-
-// ─── رنگ‌ها ───────────────────────────────────────────────
-private val BgLight      = Color(0xFFF5EFE6)
-private val GlassWhite   = Color(0xCCFFFFFF)
-private val GlassCard    = Color(0xAAFFFFFF)
-private val AccentOrange = Color(0xFFFF6B35)
-private val AccentGreen  = Color(0xFF4CAF50)
-private val AccentBlue   = Color(0xFF4A90D9)
-private val TextDark     = Color(0xFF2C1810)
-private val TextMid      = Color(0xFF6B4C3B)
-private val TextLight    = Color(0xFF9E7B6A)
-private val DivGlass     = Color(0x33000000)
+import com.mnfarzaneh.solalrchef.ui.theme.GlassIconButton
+import com.mnfarzaneh.solalrchef.ui.theme.GlassActionButton
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 @Composable
 fun RecipeDetailScreen(
@@ -87,8 +83,8 @@ fun RecipeDetailScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val hazeState = remember { HazeState() }   // ← اضافه شد
 
-    // ── ViewModel جای مستقیم‌خوانی از Repository ─────────
     val viewModel: RecipeDetailViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
@@ -96,15 +92,13 @@ fun RecipeDetailScreen(
         viewModel.loadRecipe(recipeId)
     }
 
-    // اگه پیدا نشد برگرد
     LaunchedEffect(uiState.notFound) {
         if (uiState.notFound) navController.popBackStack()
     }
 
-    // Loading
     if (uiState.isLoading || uiState.recipe == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = AccentOrange)
+            CircularProgressIndicator(color = GlassColors.AccentOrange)
         }
         return
     }
@@ -119,7 +113,9 @@ fun RecipeDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgLight)
+            .background(GlassColors.BgLight)
+            .hazeSource(state = hazeState)   // ← این خط اضافه شد: هرچی داخل این Box هست، منبع بلوره
+
     ) {
         Column(
             modifier = Modifier
@@ -133,7 +129,7 @@ fun RecipeDetailScreen(
                     .fillMaxWidth()
                     .offset(y = (-28).dp)
                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                    .background(BgLight)
+                    .background(GlassColors.BgLight)
             ) {
                 Column {
                     GlassTitleSection(recipe = recipe)
@@ -141,10 +137,9 @@ fun RecipeDetailScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     GlassMacroRow(recipe = recipe)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Divider(color = DivGlass, thickness = 1.dp,
+                    Divider(color = GlassColors.Divider, thickness = 1.dp,
                         modifier = Modifier.padding(horizontal = 20.dp))
 
-                    // ── Action Row با isFavorite از ViewModel ─
                     GlassActionRow(
                         navController   = navController,
                         recipe          = recipe,
@@ -152,15 +147,15 @@ fun RecipeDetailScreen(
                         onFavoriteClick = { viewModel.toggleFavorite() }
                     )
 
-                    Divider(color = DivGlass, thickness = 1.dp,
+                    Divider(color = GlassColors.Divider, thickness = 1.dp,
                         modifier = Modifier.padding(horizontal = 20.dp))
                     GlassStoryCard(
                         recipe = recipe,
                         onClick = { viewModel.showShoppingList()}
-                        )
-                    Text(
+                    )
+                    AppText(
                         text = recipe.description,
-                        color = TextMid,
+                        color = GlassColors.TextMid,
                         fontSize = 15.sp,
                         lineHeight = 24.sp,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
@@ -173,10 +168,11 @@ fun RecipeDetailScreen(
         GlassTopBar(
             navController    = navController,
             scrolledPastHero = scrolledPastHero,
-            title            = recipe.title
+            title            = recipe.title,
+            hazeState        = hazeState   // ← این پارامتر جدید رو پاس بده
+
         )
 
-        // ── ماشین حساب (اگه داری) ────────────────────────
         if (uiState.showCalculator) {
             IngredientCalculatorSheet(
                 ingredients = recipe.ingredients,
@@ -195,7 +191,6 @@ fun RecipeDetailScreen(
     }
 }
 
-// ─── Hero ─────────────────────────────────────────────────
 @Composable
 fun GlassHeroSection(recipe: Recipe, scrollValue: Int) {
     val imageHeight = 320.dp
@@ -236,7 +231,7 @@ fun GlassHeroSection(recipe: Recipe, scrollValue: Int) {
                     .background(Color(0xFFE0C9B0)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("🍽️", fontSize = 64.sp)
+                AppText("🍽️", fontSize = 64.sp)
             }
         }
 
@@ -259,7 +254,7 @@ fun GlassHeroSection(recipe: Recipe, scrollValue: Int) {
                         colorStops = arrayOf(
                             0.0f to Color.Transparent,
                             0.72f to Color.Transparent,
-                            1.0f to BgLight
+                            1.0f to GlassColors.BgLight
                         )
                     )
                 )
@@ -267,12 +262,12 @@ fun GlassHeroSection(recipe: Recipe, scrollValue: Int) {
     }
 }
 
-// ─── TopBar ───────────────────────────────────────────────
 @Composable
 fun GlassTopBar(
     navController: NavController,
     scrolledPastHero: Boolean,
-    title: String
+    title: String,
+    hazeState: HazeState   // ← پارامتر جدید
 ) {
     Row(
         modifier = Modifier
@@ -281,14 +276,21 @@ fun GlassTopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        GlassIconButton(onClick = { navController.popBackStack() }) {
+        GlassIconButton(
+            onClick = {
+                navController.popBackStack(
+                    route = NavGraph.Screen.Home.route,
+                    inclusive = false
+                )
+            }
+        ) {
             Icon(Icons.Default.Close, contentDescription = "Close",
-                tint = TextDark, modifier = Modifier.size(20.dp))
+                tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
         }
         if (scrolledPastHero) {
-            Text(
+            AppText(
                 text = title,
-                color = TextDark, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                color = GlassColors.TextDark, fontSize = 16.sp, fontWeight = FontWeight.Bold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
             )
@@ -296,65 +298,58 @@ fun GlassTopBar(
             Spacer(modifier = Modifier.weight(1f))
         }
 
-        GlassIconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-                tint = TextDark, modifier = Modifier.size(20.dp))
-        }
+//        GlassIconButton(
+//            onClick = { navController.popBackStack() },
+//            hazeState = hazeState   // ← اینجا هم
+//        ) {
+//            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
+//                tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
+//        }
     }
 }
 
-@Composable
-fun GlassIconButton(onClick: () -> Unit, content: @Composable () -> Unit) {
-    Box(
-        modifier = Modifier.size(40.dp).clip(CircleShape)
-            .background(GlassWhite).clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) { content() }
-}
 
-// ─── عنوان ────────────────────────────────────────────────
+
 @Composable
 fun GlassTitleSection(recipe: Recipe) {
     Column(modifier = Modifier.fillMaxWidth()
         .padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Text(recipe.title, color = TextDark, fontSize = 28.sp,
+        AppText(recipe.title, color = GlassColors.TextDark, fontSize = 28.sp,
             fontWeight = FontWeight.Bold, lineHeight = 34.sp)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("${recipe.source} • ${recipe.author}",
-            color = TextLight, fontSize = 13.sp)
+        AppText("${recipe.source} • ${recipe.author}",
+            color = GlassColors.TextLight, fontSize = 13.sp)
     }
 }
 
-// ─── کالری ────────────────────────────────────────────────
 @Composable
 fun GlassCalorieCard(recipe: Recipe) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
-            .clip(RoundedCornerShape(16.dp)).background(GlassCard)
+            .clip(RoundedCornerShape(16.dp)).background(GlassColors.GlassCard)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text("Total ${recipe.calories} kcal", color = TextDark,
+        AppText(" ${recipe.calories} کیلو کالری", color = GlassColors.TextDark,
             fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         Box(
             modifier = Modifier.size(36.dp).clip(CircleShape)
-                .background(AccentOrange.copy(alpha = 0.15f)),
+                .background(GlassColors.AccentOrange.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
-        ) { Text("🔥", fontSize = 16.sp) }
+        ) { AppText("🔥", fontSize = 16.sp) }
     }
 }
 
-// ─── ماکرو ────────────────────────────────────────────────
 @Composable
 fun GlassMacroRow(recipe: Recipe) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        GlassMacroCard("زمان کل",    recipe.totalTime, AccentOrange, Modifier.weight(1f))
-        GlassMacroCard("زمان پخت",   recipe.cookTime,  AccentBlue,   Modifier.weight(1f))
-        GlassMacroCard("تعداد خروجی", recipe.yield,    AccentGreen,  Modifier.weight(1f))
+        GlassMacroCard("زمان کل",    recipe.totalTime, GlassColors.AccentOrange, Modifier.weight(1f))
+        GlassMacroCard("زمان پخت",   recipe.cookTime,  GlassColors.AccentBlue,   Modifier.weight(1f))
+        GlassMacroCard("تعداد خروجی", recipe.yield,    GlassColors.AccentGreen,  Modifier.weight(1f))
     }
 }
 
@@ -362,11 +357,11 @@ fun GlassMacroRow(recipe: Recipe) {
 fun GlassMacroCard(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.clip(RoundedCornerShape(14.dp))
-            .background(GlassCard).padding(12.dp)
+            .background(GlassColors.GlassCard).padding(12.dp)
     ) {
-        Text(label, color = TextLight, fontSize = 10.sp, letterSpacing = 0.3.sp)
+        AppText(label, color = GlassColors.TextLight, fontSize = 10.sp, letterSpacing = 0.3.sp)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(value, color = TextDark, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        AppText(value, color = GlassColors.TextDark, fontSize = 15.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(6.dp))
         Box(modifier = Modifier.fillMaxWidth().height(4.dp)
             .clip(RoundedCornerShape(2.dp)).background(color.copy(alpha = 0.2f))) {
@@ -410,7 +405,6 @@ https://www.instagram.com/diy.by.farzaneh?utm_source=qr
     """.trimIndent()
 }
 
-// ─── Action Row — isFavorite و onFavoriteClick اضافه شد ──
 @Composable
 fun GlassActionRow(
     navController: NavController,
@@ -432,8 +426,14 @@ fun GlassActionRow(
             isPrimary = true,
             onClick   = { navController.navigate(NavGraph.Screen.Cooking.createRoute(recipe.id)) }
         )
-        // دکمه علاقه‌مندی با state واقعی
-//        hvl
+        GlassActionButton(
+            icon      = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+            label     = if (isFavorite) "علاقه‌مندی" else "افزودن",
+            modifier  = Modifier.weight(1f),
+            isPrimary = false,
+            tint      = if (isFavorite) Color(0xFFE53935) else GlassColors.TextMid,
+            onClick   = onFavoriteClick
+        )
         GlassActionButton(
             icon    = Icons.Default.Share,
             label   = "اشتراک‌گذاری",
@@ -454,38 +454,8 @@ fun GlassActionRow(
     }
 }
 
-@Composable
-fun GlassActionButton(
-    icon: ImageVector,
-    label: String,
-    modifier: Modifier = Modifier,
-    isPrimary: Boolean = false,
-    tint: Color = TextMid,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = modifier.height(58.dp).clip(RoundedCornerShape(14.dp))
-            .background(
-                if (isPrimary)
-                    Brush.linearGradient(listOf(Color(0xFFFF6B35), Color(0xFFFF8C42)))
-                else
-                    Brush.linearGradient(listOf(GlassCard, GlassCard))
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = label,
-                tint = if (isPrimary) Color.White else tint,
-                modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(label, color = if (isPrimary) Color.White else TextMid,
-                fontSize = 11.sp, fontWeight = FontWeight.Medium)
-        }
-    }
-}
 
-// ─── کارت لیست لازم ───────────────────────────────────────
+
 @Composable
 fun GlassStoryCard(
     recipe: Recipe,
@@ -494,7 +464,7 @@ fun GlassStoryCard(
     Box(
         modifier = Modifier.fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .clip(RoundedCornerShape(16.dp)).background(GlassCard).clickable {onClick()  }
+            .clip(RoundedCornerShape(16.dp)).background(GlassColors.GlassCard).clickable {onClick()  }
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -517,20 +487,20 @@ fun GlassStoryCard(
                     modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFE0C9B0)),
                     contentAlignment = Alignment.Center
-                ) { Text("🍽️", fontSize = 24.sp) }
+                ) { AppText("🍽️", fontSize = 24.sp) }
             }
 
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("لیست خرید", color = AccentOrange, fontSize = 11.sp,
+                AppText("لیست خرید", color = GlassColors.AccentOrange, fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(recipe.title, color = TextDark, fontSize = 14.sp,
+                AppText(recipe.title, color = GlassColors.TextDark, fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold, maxLines = 2,
                     overflow = TextOverflow.Ellipsis)
             }
             Icon(Icons.Default.ChevronLeft, contentDescription = null,
-                tint = TextLight, modifier = Modifier.size(20.dp))
+                tint = GlassColors.TextLight, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -609,7 +579,7 @@ fun ShoppingListSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFFF5EFE6)
+        containerColor = GlassColors.BgLight
     ) {
 
         Column(
@@ -618,14 +588,14 @@ fun ShoppingListSheet(
                 .padding(16.dp)
         ) {
 
-            Text(
+            AppText(
                 text = "لیست خرید",
                 style = MaterialTheme.typography.titleLarge
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
+            AppText(
                 text = "موادی که ندارید را انتخاب کنید"
             )
 
@@ -652,9 +622,9 @@ fun ShoppingListSheet(
                             .clip(CircleShape)
                             .background(
                                 if (checked)
-                                    AccentOrange.copy(alpha = 0.15f)
+                                    GlassColors.AccentOrange.copy(alpha = 0.15f)
                                 else
-                                    GlassWhite
+                                    GlassColors.GlassWhite
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -662,7 +632,7 @@ fun ShoppingListSheet(
                             Icon(
                                 Icons.Default.Check,
                                 contentDescription = null,
-                                tint = AccentOrange,
+                                tint = GlassColors.AccentOrange,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -670,7 +640,7 @@ fun ShoppingListSheet(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    Text(
+                    AppText(
                         text = ingredient.name
                     )
                 }
@@ -678,7 +648,7 @@ fun ShoppingListSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
+            AppText(
                 text = "وسایل مورد نیاز"
             )
 
@@ -705,9 +675,9 @@ fun ShoppingListSheet(
                             .clip(CircleShape)
                             .background(
                                 if (checked)
-                                    AccentOrange.copy(alpha = 0.15f)
+                                    GlassColors.AccentOrange.copy(alpha = 0.15f)
                                 else
-                                    GlassWhite
+                                    GlassColors.GlassWhite
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -715,7 +685,7 @@ fun ShoppingListSheet(
                             Icon(
                                 Icons.Default.Check,
                                 contentDescription = null,
-                                tint = AccentOrange,
+                                tint = GlassColors.AccentOrange,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -725,9 +695,9 @@ fun ShoppingListSheet(
                         modifier = Modifier.width(16.dp)
                     )
 
-                    Text(
+                    AppText(
                         text = equipment,
-                        color = TextDark
+                        color = GlassColors.TextDark
                     )
                 }
             }

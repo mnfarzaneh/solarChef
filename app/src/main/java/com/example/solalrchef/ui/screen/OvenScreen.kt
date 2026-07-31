@@ -22,7 +22,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,7 +61,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.mnfarzaneh.solalrchef.R
 import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
-import com.mnfarzaneh.solalrchef.ui.theme.IranSans
+import com.mnfarzaneh.solalrchef.ui.theme.AppText
+import com.mnfarzaneh.solalrchef.ui.theme.Vazirmatn
 import com.mnfarzaneh.solalrchef.viewmodel.OvenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -144,7 +147,18 @@ private enum class FirePhase {
     CENTER,      // توی مرکز میسوزه
     DONE         // متن نشون داده شد
 }
+private fun navigateToRecipeFromOven(
+    navController: NavController,
+    viewModel: OvenViewModel,
+    recipeId: String
+) {
+    viewModel.markAnimationCompleted()
 
+    navController.navigate(NavGraph.Screen.Home.route) {
+        popUpTo(NavGraph.Screen.Oven.route) { inclusive = true }
+    }
+    navController.navigate(NavGraph.Screen.RecipeDetail.createRoute(recipeId))
+}
 @Composable
 fun OvenScreen(
     navController: NavController,
@@ -323,7 +337,9 @@ fun OvenScreen(
 
     LaunchedEffect(Unit) {
         if (viewModel.animationCompleted) {
-            showFinalState()
+            navController.navigate(NavGraph.Screen.Home.route) {
+                popUpTo(NavGraph.Screen.Oven.route) { inclusive = true }
+            }
         } else {
             startAnimation()
         }
@@ -445,6 +461,12 @@ fun OvenScreen(
 
                                 firePhase = FirePhase.DONE
                                 viewModel.markAnimationCompleted()
+
+                                delay(1500)
+
+                                navController.navigate(NavGraph.Screen.Home.route) {
+                                    popUpTo(NavGraph.Screen.Oven.route) { inclusive = true }
+                                }
                             }
                         }
                     }
@@ -523,7 +545,7 @@ fun OvenScreen(
                     val measured = textMeasurer.measure(
                         text = "غذای خود را انتخاب کنید",
                         style = TextStyle(
-                            fontFamily = IranSans,
+                            fontFamily = Vazirmatn,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(1f, 0.9f, 0.4f, textAlpha)
@@ -566,7 +588,7 @@ fun OvenScreen(
                         val deco = textMeasurer.measure(
                             text = "✦  ✦  ✦",
                             style = TextStyle(
-                                fontFamily = IranSans,
+                                fontFamily = Vazirmatn,
                                 fontSize = 12.sp,
                                 color = Color(1f, 0.7f, 0.2f, textAlpha * 0.8f)
                             )
@@ -578,7 +600,7 @@ fun OvenScreen(
                     }
                     // جای style متن اصلی
                     val gradientStyle = TextStyle(
-                        fontFamily = IranSans,
+                        fontFamily = Vazirmatn,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         brush = Brush.linearGradient(
@@ -628,9 +650,7 @@ fun OvenScreen(
                         interactionSource = interactionSource,
                         indication = null  // ← بدون ripple
                     ) {
-                        navController.navigate(
-                            NavGraph.Screen.RecipeDetail.createRoute("bread")
-                        )
+                        navigateToRecipeFromOven(navController, viewModel, "bread")
                     }
             )
         }
@@ -658,9 +678,7 @@ fun OvenScreen(
                         interactionSource = interactionSource,
                         indication = null  // ← بدون ripple
                     ) {
-                        navController.navigate(
-                            NavGraph.Screen.RecipeDetail.createRoute("cake")
-                        )
+                        navigateToRecipeFromOven(navController, viewModel, "cake")
                     }
             )
         }
@@ -689,61 +707,62 @@ fun OvenScreen(
                         interactionSource = interactionSource,
                         indication = null  // ← بدون ripple
                     ){
-                        navController.navigate(
-                            NavGraph.Screen.RecipeDetail.createRoute("pizza")
-                        )
+                        navigateToRecipeFromOven(navController, viewModel, "pizza")
                     }
             )
         }
 
         // ── دکمه Replay ───────────────────────────────────
         // ── دکمه Glassmorphism SolarChef ─────────────────────────
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 52.dp, end = 16.dp)
-                .size(48.dp)
-                .graphicsLayer {
-                    shadowElevation = 18f
-                    shape = CircleShape
-                    clip = true
-
-                    ambientShadowColor = Color(0xFFFF6B35)
-                    spotShadowColor = Color(0xFFFF6B35)
-                }
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0x663A1700),
-                            Color(0x55200000)
-                        )
-                    )
-                )
-                .clickable {
-                    navController.navigate(
-                        NavGraph.Screen.MyRecipes.route
-                    )
-                },
-            contentAlignment = Alignment.Center
-        ) {
-
-            Box(
-                modifier = Modifier
-                    .size(30.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Color(0x22FF6B35)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
-        }
+//        Box(
+//            modifier = Modifier
+//                .align(Alignment.TopEnd)
+//                .padding(top = 52.dp, end = 16.dp)
+//                .size(48.dp)
+//                .graphicsLayer {
+//                    shadowElevation = 18f
+//                    shape = CircleShape
+//                    clip = true
+//
+//                    ambientShadowColor = Color(0xFFFF6B35)
+//                    spotShadowColor = Color(0xFFFF6B35)
+//                }
+//                .background(
+//                    Brush.linearGradient(
+//                        colors = listOf(
+//                            Color(0x663A1700),
+//                            Color(0x55200000)
+//                        )
+//                    )
+//                )
+//                .clickable {
+//                    navController.navigate(
+//                        NavGraph.Screen.MyRecipes.route
+//                    )
+//                },
+//            contentAlignment = Alignment.Center
+//        ) {
+//
+//            Box(
+//                modifier = Modifier
+//                    .size(30.dp)
+//                    .clip(CircleShape)
+//                    .background(
+//                        Color(0x22FF6B35)
+//                    )
+//                    .clickable {
+//                        navController.navigate(NavGraph.Screen.MyRecipes.route)  // ← مسیر صفحه‌ی دستورهای من
+//                    },
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.MenuBook,   // ← آیکون کتاب/لیست به‌جای Add
+//                    contentDescription = "دستورهای من",
+//                    tint = Color.White,
+//                    modifier = Modifier.size(20.dp)
+//                )
+//            }
+//        }
 
         Box(
             modifier = Modifier
@@ -774,11 +793,7 @@ fun OvenScreen(
                     )
                 }
                 .clickable {
-                    scope.launch {
-                        resetAnimation()
-                        delay(200)
-                        startAnimation()
-                    }
+                    navController.navigate(NavGraph.Screen.AddRecipe.route)
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -796,8 +811,8 @@ fun OvenScreen(
                     )
             )
 
-            Text(
-                text = "Solar Chef",
+            AppText(
+                text = "افزودن دستور",
                 style = TextStyle(
                     brush = Brush.linearGradient(
                         colors = listOf(
@@ -808,7 +823,7 @@ fun OvenScreen(
                     ),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = IranSans,
+                    fontFamily = Vazirmatn,
                     // ← سایه پشت متن برای خوانایی
                     shadow = Shadow(
                         color = Color.Black.copy(alpha = 0.8f),

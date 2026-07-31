@@ -46,6 +46,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,18 +55,13 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mnfarzaneh.solalrchef.model.Ingredient
 import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
+import com.mnfarzaneh.solalrchef.ui.theme.AppText
 import com.mnfarzaneh.solalrchef.viewmodel.CookingViewModel
-
+import com.mnfarzaneh.solalrchef.ui.theme.GlassColors
+import com.mnfarzaneh.solalrchef.ui.theme.GlassIconButton
+import com.mnfarzaneh.solalrchef.ui.theme.GlassActionButton
 // ─── رنگ‌ها ───────────────────────────────────────────────
-private val CkBgLight      = Color(0xFFF5EFE6)
-private val CkGlassCard    = Color(0xAAFFFFFF)
-private val CkGlassWhite   = Color(0xCCFFFFFF)
-private val CkAccentOrange = Color(0xFFFF6B35)
-private val CkAccentGreen  = Color(0xFF4CAF50)
-private val CkAccentBlue   = Color(0xFF4A90D9)
-private val CkTextDark     = Color(0xFF2C1810)
-private val CkTextLight    = Color(0xFF9E7B6A)
-private val CkDivider      = Color(0x33000000)
+
 
 @Composable
 fun CookingScreen(
@@ -81,7 +77,7 @@ fun CookingScreen(
     // لودینگ
     if (uiState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = CkAccentOrange)
+            CircularProgressIndicator(color = GlassColors.AccentOrange)
         }
         return
     }
@@ -102,32 +98,32 @@ fun CookingScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxWidth().fillMaxHeight(0.45f)
             )
-        } else {
+        } else if (recipe.detailImage != 0) {
             Image(
                 painter = painterResource(recipe.detailImage),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxWidth().fillMaxHeight(0.45f)
             )
-        }
+        } else {
 
-        // gradient پایین عکس
-        Box(
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.45f),
-            contentAlignment = Alignment.BottomCenter
-        ) {
+            // gradient پایین عکس
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, CkBgLight)
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.45f),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, GlassColors.BgLight)
+                            )
                         )
-                    )
-            )
+                )
+            }
         }
-
         // ── کارت اسکرول‌شونده ────────────────────────────
         Column(
             modifier = Modifier
@@ -140,7 +136,7 @@ fun CookingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                    .background(CkBgLight)
+                    .background(GlassColors.BgLight)
             ) {
                 // هندل اسکرول
                 Box(
@@ -149,7 +145,7 @@ fun CookingScreen(
                         .padding(top = 10.dp)
                         .width(40.dp).height(4.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(CkTextLight.copy(alpha = 0.4f))
+                        .background(GlassColors.TextLight.copy(alpha = 0.4f))
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -172,7 +168,7 @@ fun CookingScreen(
                     )
                 }
 
-                Divider(color = CkDivider, thickness = 1.dp,
+                Divider(color = GlassColors.Divider, thickness = 1.dp,
                     modifier = Modifier.padding(horizontal = 20.dp))
 
                 // وعده + کالری
@@ -183,18 +179,18 @@ fun CookingScreen(
                     onPlus   = { viewModel.incrementServings() }
                 )
 
-                Divider(color = CkDivider, thickness = 1.dp,
+                Divider(color = GlassColors.Divider, thickness = 1.dp,
                     modifier = Modifier.padding(horizontal = 20.dp))
 
                 // تب‌ها
                 TabRow(
                     selectedTabIndex = uiState.selectedTab,
-                    containerColor   = CkBgLight,
-                    contentColor     = CkAccentOrange,
+                    containerColor   = GlassColors.BgLight,
+                    contentColor     = GlassColors.AccentOrange,
                     indicator = { tabPositions ->
                         TabRowDefaults.Indicator(
                             modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab]),
-                            color    = CkAccentOrange
+                            color    = GlassColors.AccentOrange
                         )
                     }
                 ) {
@@ -202,9 +198,9 @@ fun CookingScreen(
                         selected = uiState.selectedTab == 0,
                         onClick  = { viewModel.selectTab(0) },
                         text = {
-                            Text(
+                            AppText(
                                 "مواد لازم",
-                                color = if (uiState.selectedTab == 0) CkAccentOrange else CkTextLight,
+                                color = if (uiState.selectedTab == 0) GlassColors.AccentOrange else GlassColors.TextLight,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -213,9 +209,9 @@ fun CookingScreen(
                         selected = uiState.selectedTab == 1,
                         onClick  = { viewModel.selectTab(1) },
                         text = {
-                            Text(
+                            AppText(
                                 "وسایل لازم",
-                                color = if (uiState.selectedTab == 1) CkAccentOrange else CkTextLight,
+                                color = if (uiState.selectedTab == 1) GlassColors.AccentOrange else GlassColors.TextLight,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -224,9 +220,9 @@ fun CookingScreen(
                         selected = uiState.selectedTab == 2,
                         onClick  = { viewModel.selectTab(2) },
                         text = {
-                            Text(
+                            AppText(
                                 "دستور پخت",
-                                color = if (uiState.selectedTab == 2) CkAccentOrange else CkTextLight,
+                                color = if (uiState.selectedTab == 2) GlassColors.AccentOrange else GlassColors.TextLight,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -273,22 +269,23 @@ fun CookingScreen(
         ) {
             GlassIconButton(
                 onClick = {
-                    while (navController.currentDestination?.route != NavGraph.Screen.Oven.route) {
-                        navController.popBackStack()
-                    }
+                    navController.popBackStack(
+                        route = NavGraph.Screen.Home.route,
+                        inclusive = false
+                    )
                 }
             ) {
                 Icon(Icons.Default.Close, contentDescription = "Close",
-                    tint = CkTextDark, modifier = Modifier.size(20.dp))
+                    tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
             }
-            GlassIconButton(
-                onClick = {
-                    navController.popBackStack()
-                }
-            ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-                    tint = CkTextDark, modifier = Modifier.size(20.dp))
-            }
+//            GlassIconButton(
+//                onClick = {
+//                    navController.popBackStack()
+//                }
+//            ) {
+//                Icon(Icons.Default.ArrowBack, contentDescription = "Back",
+//                    tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
+//            }
         }
 
         // ── ماشین حساب ───────────────────────────────────
@@ -310,14 +307,14 @@ fun CkTitleSection(recipe: com.mnfarzaneh.solalrchef.model.Recipe) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        Text("${recipe.source} • ${recipe.difficulty}",
-            color = CkAccentOrange, fontSize = 12.sp,
+        AppText("سطح: ${recipe.difficulty}",
+            color = GlassColors.AccentOrange, fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(recipe.title, color = CkTextDark, fontSize = 26.sp,
+        AppText(recipe.title, color = GlassColors.TextDark, fontSize = 26.sp,
             fontWeight = FontWeight.Bold, lineHeight = 32.sp)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("recipe by ${recipe.author}", color = CkTextLight, fontSize = 13.sp)
+        AppText("دستور شخصی ${recipe.author}", color = GlassColors.TextLight, fontSize = 13.sp)
         Spacer(modifier = Modifier.height(8.dp))
         CkRatingBar(rating = recipe.rating)
     }
@@ -327,14 +324,14 @@ fun CkTitleSection(recipe: com.mnfarzaneh.solalrchef.model.Recipe) {
 fun CkRatingBar(rating: Float) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         repeat(5) { index ->
-            Text(
+            AppText(
                 text  = if (index < rating.toInt()) "★" else "☆",
-                color = if (index < rating.toInt()) Color(0xFFF59E0B) else CkTextLight,
+                color = if (index < rating.toInt()) Color(0xFFF59E0B) else GlassColors.TextLight,
                 fontSize = 18.sp
             )
         }
         Spacer(modifier = Modifier.width(6.dp))
-        Text(rating.toString(), color = CkTextLight, fontSize = 13.sp)
+        AppText(rating.toString(), color = GlassColors.TextLight, fontSize = 13.sp)
     }
 }
 
@@ -347,8 +344,8 @@ fun CkStatsRow(recipe: com.mnfarzaneh.solalrchef.model.Recipe) {
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        CkStatCard("زمان کل",  recipe.totalTime, CkAccentOrange, Modifier.weight(1f))
-        CkStatCard("زمان پخت", recipe.cookTime,  CkAccentBlue,   Modifier.weight(1f))
+        CkStatCard("زمان کل",  recipe.totalTime, GlassColors.AccentOrange, Modifier.weight(1f))
+        CkStatCard("زمان پخت", recipe.cookTime,  GlassColors.AccentBlue,   Modifier.weight(1f))
     }
 }
 
@@ -357,13 +354,13 @@ fun CkStatCard(label: String, value: String, color: Color, modifier: Modifier = 
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(CkGlassCard)
+            .background(GlassColors.GlassCard)
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(value, color = CkTextDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        AppText(value, color = GlassColors.TextDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(label, color = CkTextLight, fontSize = 10.sp)
+        AppText(label, color = GlassColors.TextLight, fontSize = 10.sp)
         Spacer(modifier = Modifier.height(4.dp))
         Box(modifier = Modifier.fillMaxWidth().height(3.dp)
             .clip(RoundedCornerShape(2.dp)).background(color.copy(alpha = 0.2f))) {
@@ -382,24 +379,61 @@ fun CkServingsRow(servings: Int, calories: Int, onMinus: () -> Unit, onPlus: () 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(36.dp).clip(CircleShape)
-                .background(CkGlassCard).clickable { onMinus() },
-                contentAlignment = Alignment.Center) {
-                Text("−", color = CkTextDark, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(GlassColors.GlassCard)
+                    .clickable { onMinus() },
+                contentAlignment = Alignment.Center
+            ) {
+                AppText(
+                    "−",
+                    color = GlassColors.TextDark,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
-            Text("$servings\nوعده", color = CkTextDark, fontSize = 14.sp,
+
+            AppText(
+                "$servings",
+                color = GlassColors.TextDark,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 14.dp), lineHeight = 20.sp)
-            Box(modifier = Modifier.size(36.dp).clip(CircleShape)
-                .background(CkAccentOrange).clickable { onPlus() },
-                contentAlignment = Alignment.Center) {
-                Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                modifier = Modifier.padding(horizontal = 14.dp)
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(GlassColors.AccentOrange)
+                    .clickable { onPlus() },
+                contentAlignment = Alignment.Center
+            ) {
+                AppText(
+                    "+",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            AppText(
+                "وعده",
+                color = GlassColors.TextDark,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text("$calories", color = CkTextDark, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("کالری در هر وعده", color = CkTextLight, fontSize = 11.sp)
+            AppText("$calories", color = GlassColors.TextDark, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            AppText("کیلو کالری در هر وعده", color = GlassColors.TextLight, fontSize = 11.sp)
         }
     }
 }
@@ -408,24 +442,39 @@ fun CkServingsRow(servings: Int, calories: Int, onMinus: () -> Unit, onPlus: () 
 @Composable
 fun CkIngredientsSection(ingredients: List<Ingredient>, servingsMultiplier: Float) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
-        Text("INGREDIENTS", color = CkTextLight, fontSize = 11.sp,
-            fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
-            modifier = Modifier.padding(bottom = 12.dp))
+//        AppText("مواد لازم", color = GlassColors.TextLight, fontSize = 11.sp,
+//            fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+//            modifier = Modifier.padding(bottom = 12.dp))
         ingredients.forEach { ingredient ->
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ){
                 val adjusted = ingredient.amount.toFloatOrNull()
                     ?.let { it * servingsMultiplier }
                     ?.let {
                         if (it == it.toLong().toFloat()) it.toLong().toString()
                         else String.format("%.1f", it)
                     } ?: ingredient.amount
-                Text("$adjusted ${ingredient.unit}", color = CkAccentOrange,
-                    fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.width(110.dp))
-                Text(ingredient.name, color = CkTextDark, fontSize = 14.sp)
+
+                AppText(
+                    ingredient.name,
+                    color = GlassColors.TextDark,
+                    fontSize = 14.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                AppText(
+                    "$adjusted ${ingredient.unit}",
+                    color = GlassColors.AccentOrange,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.width(110.dp),
+                    textAlign = TextAlign.Start
+                )
             }
-            Divider(color = CkDivider, thickness = 0.5.dp)
+            Divider(color = GlassColors.Divider, thickness = 0.5.dp)
         }
     }
 }
@@ -438,14 +487,14 @@ fun CkStepsSection(
     onStepToggle: (Int) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
-        Text("DIRECTIONS", color = CkTextLight, fontSize = 11.sp,
-            fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
-            modifier = Modifier.padding(bottom = 12.dp))
+//        AppText("DIRECTIONS", color = GlassColors.TextLight, fontSize = 11.sp,
+//            fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+//            modifier = Modifier.padding(bottom = 12.dp))
 
         steps.forEachIndexed { index, step ->
             val bgColor by animateColorAsState(
                 targetValue = if (completedSteps.getOrElse(index) { false })
-                    CkAccentGreen.copy(alpha = 0.12f) else Color.Transparent,
+                    GlassColors.AccentGreen.copy(alpha = 0.12f) else Color.Transparent,
                 label = "stepBg"
             )
             Row(
@@ -459,8 +508,8 @@ fun CkStepsSection(
                 Box(
                     modifier = Modifier.size(30.dp).clip(CircleShape)
                         .background(
-                            if (completedSteps.getOrElse(index) { false }) CkAccentGreen
-                            else CkGlassCard
+                            if (completedSteps.getOrElse(index) { false }) GlassColors.AccentGreen
+                            else GlassColors.GlassCard
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -468,14 +517,14 @@ fun CkStepsSection(
                         Icon(Icons.Default.Check, null, tint = Color.White,
                             modifier = Modifier.size(16.dp))
                     } else {
-                        Text((index + 1).toString(), color = CkTextDark,
+                        AppText((index + 1).toString(), color = GlassColors.TextDark,
                             fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(modifier = Modifier.width(14.dp))
-                Text(
+                AppText(
                     step.instruction,
-                    color = if (completedSteps.getOrElse(index) { false }) CkTextLight else CkTextDark,
+                    color = if (completedSteps.getOrElse(index) { false }) GlassColors.TextLight else GlassColors.TextDark,
                     fontSize = 15.sp, lineHeight = 23.sp,
                     textDecoration = if (completedSteps.getOrElse(index) { false })
                         TextDecoration.LineThrough else TextDecoration.None,
@@ -503,16 +552,16 @@ fun CkEquipmentSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                Text(
+                AppText(
                     text = "🔸",
                     fontSize = 14.sp
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text(
+                AppText(
                     text = item,
-                    color = CkTextDark,
+                    color = GlassColors.TextDark,
                     fontSize = 16.sp
                 )
             }

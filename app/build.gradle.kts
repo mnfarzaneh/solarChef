@@ -67,8 +67,29 @@ dependencies {
     implementation(libs.hilt.android)                  // ← اضافه شد
     ksp(libs.hilt.compiler)                            // ← اضافه شد
     implementation(libs.hilt.navigation.compose)       // ← اضافه شد
+    // ── Retrofit / Network ────────────────────────────
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging.interceptor)
+
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.haze)
+
     // ── Test ─────────────────────────────────────────
     testImplementation(libs.junit)
+// ── Test ─────────────────────────────────────────
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)   // ← اضافه شد
+    testImplementation(libs.mockk)                     // ← اضافه شد
+    testImplementation(libs.turbine)                   // ← اضافه شد
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
