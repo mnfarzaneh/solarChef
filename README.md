@@ -88,11 +88,13 @@ Version 1.1.1 corrects a Room migration for users upgrading directly from an ear
 
 Automated coverage is limited. Test dependencies and test sources are present, but the extraction ViewModel test file is currently commented out. Expanding migration tests, ingredient-calculation tests, and CI verification is planned work.
 
-## Earlier interface
+## Screenshots
 
-These screenshots show the original release, before the current UI update.
+SolarChef 1.1.1 in Persian, with the dark and gold theme: browse recipes and categories, view recipe details, and add a recipe with AI-assisted text extraction.
 
-<img src="photo_2026-06-23_19-33-30.jpg" alt="Original SolarChef home screen" width="280"> <img src="photo_2026-06-23_19-33-25.jpg" alt="Original SolarChef cooking screen" width="280">
+| Home and categories | Recipe details | Add a recipe |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/home.png" alt="SolarChef home screen with articles, categories, and saved recipes" width="260"> | <img src="docs/screenshots/recipe-details.png" alt="Cake recipe with photo, cooking time, and cooking mode button" width="260"> | <img src="docs/screenshots/add-recipe.png" alt="New recipe form with photo selection and AI-assisted text extraction" width="260"> |
 
 ## Author
 
