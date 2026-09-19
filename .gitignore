@@ -27,3 +27,7 @@ app/release/
 .env
 .env.*
 google-services.json
+
+# Retired screenshots kept locally
+/photo_2026-06-23_19-33-25.jpg
+/photo_2026-06-23_19-33-30.jpg
