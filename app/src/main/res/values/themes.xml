@@ -1,21 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.SolalrChef" parent="android:Theme.Material.Light.NoActionBar" />
+    <style
+        name="Theme.SolalrChef"
+        parent="android:Theme.Material.Light.NoActionBar" />
 
-    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+    <style
+        name="Theme.App.Starting"
+        parent="Theme.SplashScreen">
 
-        <!-- رنگ پس‌زمینه‌ی splash -->
-        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <!-- نزدیک به رنگ غالب اولین فریم Oven -->
+        <item name="windowSplashScreenBackground">
+            @color/splash_background
+        </item>
 
-        <!-- لوگوی مرکزی (باید یه drawable باشه، ترجیحاً vector یا png ساده) -->
-        <item name="windowSplashScreenAnimatedIcon">@drawable/my_icon</item>
+        <!-- لوگو از اولین فریم Splash سیستمی دیده می‌شود؛ صفحهٔ کرم خالی نداریم. -->
+        <item name="windowSplashScreenAnimatedIcon">
+            @drawable/splash_icon
+        </item>
 
-        <!-- اگه لوگوت انیمیشن داره (AnimatedVectorDrawable)، این مدت زمانش (میلی‌ثانیه) -->
-        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <!-- تصویر ثابت است؛ انیمیشن اصلی در Compose اجرا می‌شود -->
+        <item name="windowSplashScreenAnimationDuration">
+            0
+        </item>
 
-        <!-- بعد از splash، به تم اصلی اپ برمی‌گردیم -->
-        <item name="postSplashScreenTheme">@style/Theme.SolalrChef</item>
+        <item name="postSplashScreenTheme">
+            @style/Theme.SolalrChef
+        </item>
+
     </style>
 
 </resources>

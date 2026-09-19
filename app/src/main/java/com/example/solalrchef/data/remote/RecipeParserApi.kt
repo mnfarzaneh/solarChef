@@ -19,6 +19,7 @@ data class ParsedRecipeResponse(
     val yield: String = "",
     val calories: String = "",
     val difficulty: String = "",
+    val categoryId: String = "",        // ← جدید
     val ingredients: List<ParsedIngredient> = emptyList(),
     val steps: List<String> = emptyList(),
     val equipment: List<String> = emptyList(),

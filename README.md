@@ -1,93 +1,101 @@
-# Solar Chef 🍳
+# SolarChef
 
-Solar Chef is a modern Android recipe application built with **Kotlin** and **Jetpack Compose**.
+An Android cooking app for saving recipes, adjusting ingredient quantities, and following recipes step by step. Built with Kotlin and Jetpack Compose, with local storage and connected services for accounts, synchronization, articles, and AI-assisted recipe extraction.
 
-The application allows users to browse recipes, create their own recipes, edit existing recipes, and store them locally on the device. One of the key features of Solar Chef is its smart ingredient scaling system, which helps users adapt recipes to the ingredients they already have at home.
-
-### Home Screen
-![Home](photo_2026-06-23_19-33-30.jpg)
-### cooking Screen
-![Home](photo_2026-06-23_19-33-25.jpg)
-
----
+**[Available on Cafe Bazaar](https://cafebazaar.ir/app/com.mnfarzaneh.solalrchef)** · Version **1.1.1** · Android **7.0+** · Persian interface
 
 ## Features
 
-- Create custom recipes
-- Edit existing recipes
-- Store recipes locally using **Room Database**
-- Add recipe images from the device gallery
-- Ingredient management
-- Equipment management
-- Step-by-step cooking instructions
-- Dynamic recipe scaling
-- Serving size adjustment
-- Ingredient quantity recalculation based on servings
-- Modern UI built entirely with **Jetpack Compose**
-- Offline-first experience
+- Create and edit recipes with photos, ingredients, equipment, and cooking steps.
+- Scale ingredients by servings or by the amount of an ingredient available.
+- Preserve qualitative amounts such as “a little” and “as needed,” alongside numeric quantities and ranges.
+- Organize recipes with custom categories and favorites.
+- Follow instructions in a dedicated cooking view.
+- Extract recipes from text, review the result, and save them.
+- Sign in to back up and synchronize personal recipe data.
+- Read structured cooking articles and share links that open on the web.
+- Choose accent colors and light or dark mode.
 
----
+Saved recipes and the ingredient calculator work locally. Account operations, synchronization, article downloads, and AI extraction require network access.
 
-## Smart Ingredient Calculator
+## Android architecture
 
-Solar Chef includes a built-in ingredient calculator that automatically recalculates ingredient quantities when the serving size changes.
+Compose screens observe ViewModel state through StateFlow. Repositories coordinate Room storage and remote API calls. Hilt supplies dependencies, and WorkManager handles background synchronization and article checks.
 
-In addition, users can enter the amount of ingredients they currently have available and estimate how many servings of a recipe they can prepare. This makes recipe scaling practical and helps reduce ingredient waste.
+| Area | Technologies |
+| --- | --- |
+| UI | Jetpack Compose, Material 3, Navigation Compose, Coil |
+| State and asynchronous work | ViewModel, StateFlow, Kotlin Coroutines |
+| Dependency injection | Hilt |
+| Local data | Room, DAOs, explicit database migrations |
+| Networking | Retrofit, OkHttp, Gson |
+| Background work | WorkManager |
+| Release build | Gradle, R8, environment-based signing configuration |
 
----
+Firebase dependencies and integration code remain in the project, so a local Firebase configuration is required to build it.
 
-## Tech Stack
+## Connected services
 
-- **Kotlin**
-- **Jetpack Compose**
-- **MVVM Architecture**
-- **Hilt Dependency Injection**
-- **Room Database**
-- **StateFlow**
-- **Navigation Compose**
-- **Coil**
+This repository contains the Android application. The wider SolarChef product includes separately maintained services:
 
----
+- **Kotlin / Ktor and PostgreSQL:** accounts, recipe data, categories, and articles.
+- **ArvanCloud object storage:** recipe and article images accessed through signed URLs.
+- **Python / Flask and Gemini:** extraction of structured recipe data from text, followed by review in the app.
+- **Web article pages and an admin panel:** article publishing, recipe inspection, and storage management.
 
-## Architecture
+Article notifications use WorkManager checks scheduled at a 24-hour interval. Delivery depends on Android background scheduling and notification permission; this is not immediate server push.
 
-The project follows the **MVVM (Model–View–ViewModel)** architecture pattern.
+## Build locally
 
-- **Jetpack Compose** is used for building the UI.
-- **ViewModels** manage screen state using **StateFlow**.
-- **Repositories** handle data operations.
-- **Room Database** provides local persistence.
-- **Hilt** manages dependency injection throughout the application.
+1. Clone the repository and open it in Android Studio.
+2. Install Android SDK 36 and configure its path through Android Studio or `local.properties`.
+3. Use JDK 21 to run Gradle. The app's JVM compilation target is 11.
+4. Add your own Firebase `google-services.json` to `app/`, configured for package `com.mnfarzaneh.solalrchef`. This file is excluded from Git.
+5. Review the API URLs in `NetworkModule.kt`. They currently point to deployed SolarChef services; configure your own endpoints for development against a separate backend.
 
----
+From PowerShell at the project root:
 
-## State Management
+```powershell
+.\gradlew.bat :app:assembleDebug
+```
 
-**StateFlow** is used as the primary state management solution across the application.
+Backend services are not provisioned by this repository. Gemini credentials belong on the extraction server, not in the Android client.
 
-Examples include:
+### Release signing
 
-- Add Recipe form state
-- Recipe Details screen state
-- Loading states
-- Serving size adjustments
-- Cooking step completion tracking
-- Ingredient calculator updates
+The release signing configuration uses four environment variables:
 
----
+```text
+SOLARCHEF_KEYSTORE_PATH
+SOLARCHEF_STORE_PASSWORD
+SOLARCHEF_KEY_ALIAS
+SOLARCHEF_KEY_PASSWORD
+```
 
-## Screens
+All four must be present to enable the configured signing. Keep the keystore and passwords private.
 
-- Recipe List
-- Recipe Details
-- Add Recipe
-- Edit Recipe
-- Ingredient Calculator
+```powershell
+.\gradlew.bat :app:assembleRelease :app:bundleRelease
+```
 
----
+## Release history
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+Version 1.1.1 corrects a Room migration for users upgrading directly from an earlier published database schema. Existing recipe data is copied into the current schema rather than discarded.
+
+## Testing and next steps
+
+Automated coverage is limited. Test dependencies and test sources are present, but the extraction ViewModel test file is currently commented out. Expanding migration tests, ingredient-calculation tests, and CI verification is planned work.
+
+## Earlier interface
+
+These screenshots show the original release, before the current UI update.
+
+<img src="photo_2026-06-23_19-33-30.jpg" alt="Original SolarChef home screen" width="280"> <img src="photo_2026-06-23_19-33-25.jpg" alt="Original SolarChef cooking screen" width="280">
 
 ## Author
 
-**Zahra Mirzaalian**
+**Zahra Mirzaalian** — creator and developer of SolarChef.
 
-Android Developer
+[GitHub](https://github.com/mnfarzaneh)

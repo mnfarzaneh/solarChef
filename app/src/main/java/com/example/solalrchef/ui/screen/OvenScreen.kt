@@ -1,837 +1,547 @@
 package com.mnfarzaneh.solalrchef.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameMillis
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.mnfarzaneh.solalrchef.R
 import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
 import com.mnfarzaneh.solalrchef.ui.theme.AppText
 import com.mnfarzaneh.solalrchef.ui.theme.Vazirmatn
+import com.mnfarzaneh.solalrchef.viewmodel.CategoryViewModel
+import com.mnfarzaneh.solalrchef.viewmodel.CategoryWithCount
 import com.mnfarzaneh.solalrchef.viewmodel.OvenViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
-import kotlin.random.Random
+import androidx.compose.ui.zIndex
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.graphics.drawscope.clipRect
 
-
-// تابع کمکی برای رسم متن با outline
-// ─── تابع outline نرم ────────────────────────────────────
-private fun DrawScope.drawTextWithOutline(
-    textMeasurer: TextMeasurer,
-    text: String,
-    style: TextStyle,
-    topLeft: Offset,
-    outlineColor: Color,
-    outlineWidth: Float = 5f
-) {
-    // ۳۶۰ درجه دور متن میچرخیم - کاملاً نرم و بدون نقطه
-    val steps = 24  // هر چی بیشتر، نرم‌تر (24 کافیه)
-    for (i in 0 until steps) {
-        val angle = (i * 2 * Math.PI / steps).toFloat()
-        val ox = cos(angle) * outlineWidth
-        val oy = sin(angle) * outlineWidth
-        drawText(
-            textLayoutResult = textMeasurer.measure(
-                text, style.copy(color = outlineColor)
-            ),
-            topLeft = Offset(topLeft.x + ox, topLeft.y + oy)
-        )
-    }
-    // متن اصلی روی outline
-    drawText(
-        textLayoutResult = textMeasurer.measure(text, style),
-        topLeft = topLeft
-    )
-}
-// ─── فریم‌های در ─────────────────────────────────────────
 private val doorFrames = listOf(
-    R.drawable.closed0,
-    R.drawable.open10,
-    R.drawable.open30,
-    R.drawable.open45,
-    R.drawable.open75,
-    R.drawable.open85,
-    R.drawable.open90,
+    R.drawable.closed0, R.drawable.open10, R.drawable.open30,
+    R.drawable.open45, R.drawable.open75, R.drawable.open85, R.drawable.open90,
 )
-private val doorFrameDelays = listOf(
-    80L,
-    70L,
-    60L,
-    60L,
-    80L,
-    120L
-)
+private val doorFrameDelays = listOf(80L, 70L, 60L, 60L, 80L, 120L)
 
-// ─── موقعیت‌های غذا ──────────────────────────────────────
-private data class FoodPosition(val x: Dp, val y: Dp)
-private val POS_INSIDE = FoodPosition(23.dp,      17.dp)
-private val POS_LEFT   = FoodPosition((-130).dp, (-120).dp)
-private val POS_CENTER = FoodPosition(0.dp,      (-180).dp)
-private val POS_RIGHT  = FoodPosition(130.dp,    (-120).dp)
+// ─── state هر کارت ───────────────────────────────────────
+private class CardAnimState {
 
-// ─── ذره آتش ─────────────────────────────────────────────
-private data class FireParticle(
-    var x: Float,
-    var y: Float,
-    var vx: Float,
-    var vy: Float,
-    var life: Float,          // 1.0 → 0.0
-    val decay: Float,
-    var size: Float,
-    val hue: Float            // 0–60 (قرمز تا زرد)
-)
+    val translationY = Animatable(-26f)
 
-// ─── مراحل آتش‌بازی ──────────────────────────────────────
-private enum class FirePhase {
-    IDLE,        // هنوز شروع نشده
-    ROTATING,    // دور دایره میچرخه
-    TO_CENTER,   // داره میاد مرکز
-    CENTER,      // توی مرکز میسوزه
-    DONE         // متن نشون داده شد
+    val alpha = Animatable(0f)
+
+    val scale = Animatable(0.94f)
+
 }
-private fun navigateToRecipeFromOven(
+
+// ─── انیمیشن پرتاب کارت (مثل ویندوز سولیتر) ─────────────
+private suspend fun revealCard(
+    state: CardAnimState,
+    index: Int
+) = coroutineScope {
+
+    state.alpha.snapTo(0f)
+    state.translationY.snapTo((-26 + index * 4).toFloat())
+    state.scale.snapTo(0.94f)
+
+    launch {
+
+        state.alpha.animateTo(
+            1f,
+            tween(
+                durationMillis = 180,
+                easing = FastOutSlowInEasing
+            )
+        )
+
+    }
+
+    launch {
+
+        state.translationY.animateTo(
+            0f,
+            tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
+            )
+        )
+
+    }
+
+    launch {
+
+        state.scale.animateTo(
+            1f,
+            keyframes {
+
+                durationMillis = 280
+
+                1.015f at 180
+
+                1f at 280
+
+            }
+
+        )
+
+    }
+
+}
+
+private fun navigateToCategoryFromOven(
     navController: NavController,
     viewModel: OvenViewModel,
-    recipeId: String
+    categoryId: String,
+    categoryName: String
 ) {
     viewModel.markAnimationCompleted()
-
     navController.navigate(NavGraph.Screen.Home.route) {
         popUpTo(NavGraph.Screen.Oven.route) { inclusive = true }
     }
-    navController.navigate(NavGraph.Screen.RecipeDetail.createRoute(recipeId))
+    navController.navigate(NavGraph.Screen.CategoryRecipes.createRoute(categoryId, categoryName))
 }
+
+private fun navigateToHomeFromOven(navController: NavController, viewModel: OvenViewModel) {
+    viewModel.markAnimationCompleted()
+    navController.navigate(NavGraph.Screen.Home.route) {
+        popUpTo(NavGraph.Screen.Oven.route) { inclusive = true }
+    }
+}
+
 @Composable
 fun OvenScreen(
-    navController: NavController,
+    onFinished: () -> Unit,
     viewModel: OvenViewModel = viewModel()
 ) {
-    // ── state انیمیشن در ──────────────────────────────────
     var currentDoorFrame by remember { mutableIntStateOf(0) }
 
-    // ── state غذاها ───────────────────────────────────────
-    val interactionSource = remember { MutableInteractionSource() }
-
-    val pressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
-        animationSpec = tween(80),
-        label = "pressScale"
-    )
-
-    var fireAlpha by remember { mutableFloatStateOf(1f) }
-
-    val symbols = listOf(
-        "✦",
-        "✧",
-        "✶",
-        "✷",
-        "✹"
-    )
-
-    var showBread by remember { mutableStateOf(false) }
-    var showCake  by remember { mutableStateOf(false) }
-    var showPizza by remember { mutableStateOf(false) }
-
-    var breadPos  by remember { mutableStateOf(POS_INSIDE) }
-    var cakePos   by remember { mutableStateOf(POS_INSIDE) }
-    var pizzaPos  by remember { mutableStateOf(POS_INSIDE) }
-
-    var scaleBread by remember { mutableFloatStateOf(0.8f) }
-    var scaleCake  by remember { mutableFloatStateOf(0.8f) }
-    var scalePizza by remember { mutableFloatStateOf(0.8f) }
-
-    val springSpec = spring<Dp>(dampingRatio = 0.5f, stiffness = Spring.StiffnessVeryLow)
-
-    val breadX     by animateDpAsState(breadPos.x, springSpec, label = "bX")
-    val breadY     by animateDpAsState(breadPos.y, springSpec, label = "bY")
-    val breadScale by animateFloatAsState(scaleBread, label = "bS")
-
-    val cakeX      by animateDpAsState(cakePos.x, springSpec, label = "cX")
-    val cakeY      by animateDpAsState(cakePos.y, springSpec, label = "cY")
-    val cakeScale  by animateFloatAsState(scaleCake, label = "cS")
-
-    val pizzaX     by animateDpAsState(pizzaPos.x, springSpec, label = "pX")
-    val pizzaY     by animateDpAsState(pizzaPos.y, springSpec, label = "pY")
-    val pizzaScale by animateFloatAsState(scalePizza, label = "pS")
-
-    // ── state آتش ─────────────────────────────────────────
-    var firePhase     by remember { mutableStateOf(FirePhase.IDLE) }
-    var fireAngle     by remember { mutableFloatStateOf((-Math.PI / 2).toFloat()) }
-    var fireHeadX     by remember { mutableFloatStateOf(0f) }
-    var fireHeadY     by remember { mutableFloatStateOf(0f) }
-    var showText      by remember { mutableStateOf(false) }
-    var textAlpha     by remember { mutableFloatStateOf(0f) }
-    val particles     = remember { mutableStateListOf<FireParticle>() }
-
-    val textMeasurer  = rememberTextMeasurer()
-    val scope         = rememberCoroutineScope()
-
-    // ── ریست کامل ─────────────────────────────────────────
-    fun resetAnimation() {
-        currentDoorFrame = 0
-        showBread = false; showCake = false; showPizza = false
-        breadPos = POS_INSIDE; cakePos = POS_INSIDE; pizzaPos = POS_INSIDE
-        scaleBread = 0.8f; scaleCake = 0.8f; scalePizza = 0.8f
-        firePhase = FirePhase.IDLE
-        fireAngle = (-Math.PI / 2).toFloat()
-        particles.clear()
-        showText = false
-        textAlpha = 0f
+    val morphProgress = remember {
+        Animatable(0f)
     }
 
-    // ── انیمیشن اصلی ──────────────────────────────────────
-    suspend fun startAnimation() {
+    fun sectionProgress(
+        start: Float,
+        end: Float
+    ): Float {
+        return ((morphProgress.value - start) / (end - start))
+            .coerceIn(0f, 1f)
+    }
 
-        // باز شدن در
+    LaunchedEffect(Unit) {
+        if (viewModel.animationCompleted) {
+            onFinished()
+            return@LaunchedEffect
+        }
+
         delay(200)
 
+        // بازشدن در فر
         for (frame in 1..6) {
             currentDoorFrame = frame
             delay(doorFrameDelays[frame - 1])
         }
 
-        delay(120)
+        // خروج برند، بزرگ‌شدن و پوشاندن صفحه
+        morphProgress.animateTo(
+            targetValue = 0.78f,
+            animationSpec = tween(
+                durationMillis = 930,
+                easing = LinearEasing
+            )
+        )
 
-        // ── نان ──────────────────
-        showBread = true
-        scaleBread = 0.8f
-        breadPos = POS_INSIDE
-
-        delay(80)
-        scaleBread = 1.12f
-
-        delay(60)
-        breadPos = POS_LEFT
-
-        delay(220)
-        scaleBread = 1f
-
-        delay(120)
-
-        // ── کیک ──────────────────
-        showCake = true
-        scaleCake = 0.8f
-        cakePos = POS_INSIDE
-
-        delay(80)
-        scaleCake = 1.12f
-
-        delay(60)
-
-        breadPos = POS_CENTER
-        cakePos = POS_LEFT
-
-        delay(220)
-
-        scaleCake = 1f
-        scaleBread = 1f
-
-        delay(120)
-
-        // ── پیتزا ────────────────
-        showPizza = true
-        scalePizza = 0.8f
-        pizzaPos = POS_INSIDE
-
-        delay(80)
-        scalePizza = 1.12f
-
-        delay(60)
-
-        breadPos = POS_RIGHT
-        cakePos = POS_CENTER
-        pizzaPos = POS_LEFT
-
-        delay(220)
-
-        scalePizza = 1f
-        scaleCake = 1f
-        scaleBread = 1f
-
-        // کمی مکث قبل از آتش
-        delay(250)
-
-        firePhase = FirePhase.ROTATING
+        viewModel.markAnimationCompleted()
+        onFinished()
     }
-
-    fun showFinalState() {
-        currentDoorFrame = 6
-
-        showBread = true
-        showCake = true
-        showPizza = true
-
-        breadPos = POS_RIGHT
-        cakePos = POS_CENTER
-        pizzaPos = POS_LEFT
-
-        scaleBread = 1f
-        scaleCake = 1f
-        scalePizza = 1f
-
-        firePhase = FirePhase.DONE
-        showText = true
-        textAlpha = 1f
-        fireAlpha = 0f
-    }
-
-    LaunchedEffect(Unit) {
-        if (viewModel.animationCompleted) {
-            navController.navigate(NavGraph.Screen.Home.route) {
-                popUpTo(NavGraph.Screen.Oven.route) { inclusive = true }
+    val ovenOverlayAlpha =
+        1f - sectionProgress(
+            start = 0.38f,
+            end = 0.74f
+        )
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                alpha = ovenOverlayAlpha
             }
-        } else {
-            startAnimation()
-        }
-    }
-
-    // ── loop آتش با withFrameMillis ───────────────────────
-    LaunchedEffect(firePhase) {
-        if (firePhase == FirePhase.IDLE || firePhase == FirePhase.DONE) return@LaunchedEffect
-
-        // شعاع دایره (px) - تقریباً برابر فاصله غذاها از مرکز
-
-        val radius = 340f
-        var totalRotated = 0f
-        var centerX = 0f
-        var centerY = 0f
-
-        while (firePhase != FirePhase.DONE) {
-            withFrameMillis { _ ->
-
-                when (firePhase) {
-
-                    FirePhase.ROTATING -> {
-                        // سر آتش روی دایره
-                        val hx = radius * cos(fireAngle)
-                        val hy = radius * sin(fireAngle)
-                        fireHeadX = hx
-                        fireHeadY = hy
-
-                        // spawn ذرات آتش
-                        repeat(5) {
-                            val spread = (Random.nextFloat() - 0.5f) * 0.8f
-                            val speed  = 2f + Random.nextFloat() * 3f
-                            particles.add(
-                                FireParticle(
-                                    x = hx, y = hy,
-                                    vx = cos(fireAngle + spread + Math.PI.toFloat()) * speed * 0.4f,
-                                    vy = sin(fireAngle + spread + Math.PI.toFloat()) * speed * 0.4f,
-                                    life = 1f,
-                                    decay = 0.025f + Random.nextFloat() * 0.035f,
-                                    size = 6f + Random.nextFloat() * 10f,
-                                    hue = Random.nextFloat() * 50f
-                                )
-                            )
-                        }
-
-                        fireAngle += 0.12f
-                        totalRotated += 0.12f
-
-                        if (totalRotated >= Math.PI.toFloat() * 2f) {
-                            firePhase = FirePhase.TO_CENTER
-                            centerX = 0f
-                            centerY = 0f
-                        }
-                    }
-
-                    FirePhase.TO_CENTER -> {
-                        val dx = centerX - fireHeadX
-                        val dy = centerY - fireHeadY
-                        val dist = sqrt(dx * dx + dy * dy)
-
-                        fireHeadX += dx * 0.1f
-                        fireHeadY += dy * 0.1f
-
-                        repeat(6) {
-                            val a = Random.nextFloat() * Math.PI.toFloat() * 2f
-                            particles.add(
-                                FireParticle(
-                                    x = fireHeadX, y = fireHeadY,
-                                    vx = cos(a) * (1f + Random.nextFloat() * 2f),
-                                    vy = sin(a) * (1f + Random.nextFloat() * 2f),
-                                    life = 1f,
-                                    decay = 0.02f + Random.nextFloat() * 0.03f,
-                                    size = 7f + Random.nextFloat() * 12f,
-                                    hue = Random.nextFloat() * 55f
-                                )
-                            )
-                        }
-
-                        if (dist < 8f) {
-                            firePhase = FirePhase.CENTER
-                        }
-                    }
-
-                    FirePhase.CENTER -> {
-                        repeat(8) {
-                            val a = Random.nextFloat() * Math.PI.toFloat() * 2f
-                            val spd = 1f + Random.nextFloat() * 3f
-                            particles.add(
-                                FireParticle(
-                                    x = 0f, y = 0f,
-                                    vx = cos(a) * spd,
-                                    vy = sin(a) * spd - 1f,
-                                    life = 1f,
-                                    decay = 0.015f + Random.nextFloat() * 0.025f,
-                                    size = 8f + Random.nextFloat() * 14f,
-                                    hue = Random.nextFloat() * 55f
-                                )
-                            )
-                        }
-
-                        // بعد از ۶۰ فریم متن نشون میده
-                        if (!showText) {
-                            showText = true
-                            scope.launch {
-
-                                repeat(20) {
-                                    textAlpha = it / 20f
-                                    fireAlpha = 1f - (it / 20f)
-
-                                    delay(16)
-                                }
-
-                                textAlpha = 1f
-                                fireAlpha = 0f
-
-                                particles.clear()
-
-                                delay(800)
-
-                                firePhase = FirePhase.DONE
-                                viewModel.markAnimationCompleted()
-
-                                delay(1500)
-
-                                navController.navigate(NavGraph.Screen.Home.route) {
-                                    popUpTo(NavGraph.Screen.Oven.route) { inclusive = true }
-                                }
-                            }
-                        }
-                    }
-
-                    else -> {}
-                }
-
-                // آپدیت همه ذرات
-                val iter = particles.iterator()
-                while (iter.hasNext()) {
-                    val p = iter.next()
-                    p.x    += p.vx
-                    p.y    += p.vy
-                    p.vy   -= 0.06f          // شناوری رو به بالا
-                    p.life -= p.decay
-                    p.size *= 0.97f
-                    if (p.life <= 0f) iter.remove()
-                }
-            }
-        }
-    }
-
-    // ── UI ────────────────────────────────────────────────
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
     ) {
-        // بک‌گراند
+        val density = LocalDensity.current
+
+
+        val cardEntrance = sectionProgress(0f, 0.38f)
+        val surfaceAppearance = sectionProgress(0.08f, 0.20f)
+        val surfaceExpansion = sectionProgress(0.14f, 0.78f)
+        val cardToHeaderProgress = sectionProgress(0.28f, 0.78f)
+        val ovenFade = 1f - sectionProgress(0.16f, 0.72f)
+        val headerTravelY = with(density) {
+            (maxHeight / 2 - 62.dp).toPx()
+        }
+
+        val headerTravelX = with(density) {
+            maxOf(
+                0f,
+                maxWidth.value / 2f - 135f
+            ).dp.toPx()
+        }
+
+        // تصویر آشپزخانه
         Image(
             painter = painterResource(R.drawable.mainbg),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    alpha = 1f
+                    scaleX = 1f + (morphProgress.value * 0.04f)
+                    scaleY = 1f + (morphProgress.value * 0.04f)
+                }
         )
 
-        // در فر
+        // روشنایی بالای Status bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xEFFFFAF6),
+                            Color.Transparent
+                        )
+                    )
+                )
+                .graphicsLayer {
+                    alpha = ovenFade
+                }
+        )
+
+        // فر
         Image(
             painter = painterResource(doorFrames[currentDoorFrame]),
             contentDescription = null,
-            modifier = Modifier.fillMaxWidth(0.8f)
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(0.78f)
+                .graphicsLayer {
+                    alpha = 1f
+                    scaleX = 1f - morphProgress.value * 0.05f
+                    scaleY = 1f - morphProgress.value * 0.05f
+                }
         )
 
-        // ── Canvas آتش (زیر غذاها) ───────────────────────
-        if (firePhase != FirePhase.IDLE) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val cx = size.width / 2f
-                val cy = size.height / 2f
+        /*
+         * کارت اولیه برند که از فر بیرون می‌آید.
+         */
+        CompositionLocalProvider(
+            LocalLayoutDirection provides LayoutDirection.Rtl
+        ) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .zIndex(3f)
+                    .graphicsLayer {
+                        val initialScale = 0.16f
+                        val finalScale = 1f
 
-                // رسم ذرات
-                particles.forEach { p ->
-                    val alpha = p.life.coerceIn(0f, 1f) * fireAlpha
-                    val lightness = 0.5f + p.life * 0.3f
-                    drawCircle(
-                        color = Color.hsv(p.hue, 1f, lightness, alpha),
-                        radius = p.size.coerceAtLeast(0.5f),
-                        center = Offset(cx + p.x, cy + p.y)
-                    )
-                }
+                        val softEntrance = cardEntrance *
+                                cardEntrance *
+                                (3f - 2f * cardEntrance)
 
-                // هسته درخشان سر آتش (فاز چرخش و حرکت به مرکز)
-                if (firePhase == FirePhase.ROTATING || firePhase == FirePhase.TO_CENTER) {
-                    drawCircle(
-                        color = Color(1f, 0.95f, 0.6f, 0.95f),
-                        radius = 10f,
-                        center = Offset(cx + fireHeadX, cy + fireHeadY)
-                    )
-                    drawCircle(
-                        color = Color(1f, 0.7f, 0.2f, 0.5f),
-                        radius = 20f,
-                        center = Offset(cx + fireHeadX, cy + fireHeadY)
-                    )
-                }
+                        scaleX = initialScale +
+                                softEntrance * (finalScale - initialScale)
 
-                // متن مرکز
-                if (showText && textAlpha > 0f) {
-                    val measured = textMeasurer.measure(
-                        text = "غذای خود را انتخاب کنید",
-                        style = TextStyle(
-                            fontFamily = Vazirmatn,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(1f, 0.9f, 0.4f, textAlpha)
+                        scaleY = initialScale +
+                                softEntrance * (finalScale - initialScale)
+
+                        translationY =
+                            with(density) {
+                                (58.dp * (1f - softEntrance)).toPx()
+                            } - headerTravelY * cardToHeaderProgress
+
+                        translationX =
+                            headerTravelX * cardToHeaderProgress
+
+                        alpha = sectionProgress(0f, 0.12f)
+                    }
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Color.White.copy(
+                            alpha = 0.88f * (1f - cardToHeaderProgress)
                         )
                     )
-                    // توی Canvas، قبل از drawText اضافه کن:
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(
+                            alpha = 0.94f * (1f - cardToHeaderProgress)
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .padding(
+                        horizontal = (16f * (1f - cardToHeaderProgress)).dp,
+                        vertical = (10f * (1f - cardToHeaderProgress)).dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.solarchef_logo),
+                    contentDescription = "لوگوی SolarChef",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(RoundedCornerShape(17.dp))
+                )
 
-                    if (showText && textAlpha > 0f) {
-
-                        // ── لایه ۱: هاله نارنجی بزرگ و محو ──
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Color(0.85f, 0.25f, 0.0f, 0.45f * textAlpha),  // نارنجی-قرمز
-                                    Color(0.7f,  0.15f, 0.0f, 0.25f * textAlpha),  // قرمز تیره
-                                    Color.Transparent
-                                ),
-                                center = Offset(cx, cy),
-                                radius = 280f
-                            ),
-                            radius = 280f,
-                            center = Offset(cx, cy)
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AppText(
+                            text = "SolarChef",
+                            color = Color(0xFF341D15),
+                            fontSize = 27.sp,
+                            fontWeight = FontWeight.Bold
                         )
 
-                        // ── لایه ۲: هسته درخشان‌تر ──
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Color(1f, 0.45f, 0.0f, 0.35f * textAlpha),
-                                    Color.Transparent
-                                ),
-                                center = Offset(cx, cy),
-                                radius = 160f
-                            ),
-                            radius = 160f,
-                            center = Offset(cx, cy)
-                        )
+                        Spacer(Modifier.width(7.dp))
 
-                        // ── تزیین ✦ ✦ ✦ ──
-                        val deco = textMeasurer.measure(
-                            text = "✦  ✦  ✦",
-                            style = TextStyle(
-                                fontFamily = Vazirmatn,
-                                fontSize = 12.sp,
-                                color = Color(1f, 0.7f, 0.2f, textAlpha * 0.8f)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    Color(0xFFFF7043).copy(
+                                        alpha = 0.12f * cardToHeaderProgress
+                                    )
+                                )
+                                .padding(horizontal = 7.dp, vertical = 3.dp)
+                                .graphicsLayer {
+                                    alpha = cardToHeaderProgress
+                                }
+                        ) {
+                            AppText(
+                                text = "آشپزخانه من",
+                                color = Color(0xFFFF7043),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
+                        }
+                    }
+
+                    Spacer(Modifier.height(3.dp))
+
+                    Box {
+                        AppText(
+                            text = "آشپزخانه همیشه همراه تو",
+                            color = Color(0xFF856E63),
+                            fontSize = 11.sp,
+                            modifier = Modifier.graphicsLayer {
+                                alpha = 1f - cardToHeaderProgress
+                            }
                         )
-                        drawText(
-                            textLayoutResult = deco,
-                            topLeft = Offset(cx - deco.size.width / 2f, cy + measured.size.height / 2f)
+
+                        AppText(
+                            text = "سلام، امروز چی می‌پزی؟",
+                            color = Color(0xFF856E63),
+                            fontSize = 13.sp,
+                            modifier = Modifier.graphicsLayer {
+                                alpha = cardToHeaderProgress
+                            }
                         )
                     }
-                    // جای style متن اصلی
-                    val gradientStyle = TextStyle(
-                        fontFamily = Vazirmatn,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(1f, 0.95f, 0.3f, textAlpha),   // زرد طلایی
-                                Color(1f, 0.55f, 0.1f, textAlpha),   // نارنجی
-                                Color(1f, 0.85f, 0.2f, textAlpha),   // طلایی روشن
-                            )
-                        )
-                    )
-
-                    drawTextWithOutline(
-                        textMeasurer = textMeasurer,
-                        text = "غذای خود را انتخاب کنید",
-                        style = gradientStyle,
-                        topLeft = Offset(
-                            cx - measured.size.width / 2f,
-                            cy - measured.size.height / 2f - 20f
-                        ),
-                        outlineColor = Color(0.3f, 0.05f, 0f, textAlpha * 0.9f),
-                        outlineWidth = 4f
-                    )
                 }
             }
         }
 
-        // ── نان ───────────────────────────────────────────
-        if (showBread) {
-            val interactionSource = remember { MutableInteractionSource() }
-            val pressed by interactionSource.collectIsPressedAsState()
-            val pressScale by animateFloatAsState(
-                targetValue = if (pressed) 0.88f else 1f,
-                animationSpec = tween(80),
-                label = "breadPress"
-            )
-            Image(
-                painter = painterResource(R.drawable.bread1),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(90.dp)
-                    .offset(x = breadX, y = breadY)
-                    .graphicsLayer {
-                        scaleX = breadScale * pressScale
-                        scaleY = breadScale * pressScale
-                    }
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null  // ← بدون ripple
-                    ) {
-                        navigateToRecipeFromOven(navController, viewModel, "bread")
-                    }
-            )
-        }
-
-        // ── کیک ───────────────────────────────────────────
-        if (showCake) {
-            val interactionSource = remember { MutableInteractionSource() }
-            val pressed by interactionSource.collectIsPressedAsState()
-            val pressScale by animateFloatAsState(
-                targetValue = if (pressed) 0.88f else 1f,
-                animationSpec = tween(80),
-                label = "breadPress"
-            )
-            Image(
-                painter = painterResource(R.drawable.cake1),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(80.dp)
-                    .offset(x = cakeX, y = cakeY)
-                    .graphicsLayer {
-                        scaleX = cakeScale * pressScale
-                        scaleY = cakeScale * pressScale
-                    }
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null  // ← بدون ripple
-                    ) {
-                        navigateToRecipeFromOven(navController, viewModel, "cake")
-                    }
-            )
-        }
-
-        // ── پیتزا ─────────────────────────────────────────
-        if (showPizza) {
-            val interactionSource = remember { MutableInteractionSource() }
-            val pressed by interactionSource.collectIsPressedAsState()
-            val pressScale by animateFloatAsState(
-                targetValue = if (pressed) 0.88f else 1f,
-                animationSpec = tween(80),
-                label = "breadPress"
-            )
-            Image(
-                painter = painterResource(R.drawable.pizza1),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(93.dp)
-                    .offset(x = pizzaX, y = pizzaY)
-                    .graphicsLayer {
-                        scaleX = pizzaScale * pressScale
-                        scaleY = pizzaScale * pressScale
-                    }
-                    .clip(CircleShape)  // ← اضافه کن تا ripple گرد بشه
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null  // ← بدون ripple
-                    ){
-                        navigateToRecipeFromOven(navController, viewModel, "pizza")
-                    }
-            )
-        }
-
-        // ── دکمه Replay ───────────────────────────────────
-        // ── دکمه Glassmorphism SolarChef ─────────────────────────
-//        Box(
-//            modifier = Modifier
-//                .align(Alignment.TopEnd)
-//                .padding(top = 52.dp, end = 16.dp)
-//                .size(48.dp)
-//                .graphicsLayer {
-//                    shadowElevation = 18f
-//                    shape = CircleShape
-//                    clip = true
-//
-//                    ambientShadowColor = Color(0xFFFF6B35)
-//                    spotShadowColor = Color(0xFFFF6B35)
-//                }
-//                .background(
-//                    Brush.linearGradient(
-//                        colors = listOf(
-//                            Color(0x663A1700),
-//                            Color(0x55200000)
-//                        )
-//                    )
-//                )
-//                .clickable {
-//                    navController.navigate(
-//                        NavGraph.Screen.MyRecipes.route
-//                    )
-//                },
-//            contentAlignment = Alignment.Center
-//        ) {
-//
-//            Box(
-//                modifier = Modifier
-//                    .size(30.dp)
-//                    .clip(CircleShape)
-//                    .background(
-//                        Color(0x22FF6B35)
-//                    )
-//                    .clickable {
-//                        navController.navigate(NavGraph.Screen.MyRecipes.route)  // ← مسیر صفحه‌ی دستورهای من
-//                    },
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Default.MenuBook,   // ← آیکون کتاب/لیست به‌جای Add
-//                    contentDescription = "دستورهای من",
-//                    tint = Color.White,
-//                    modifier = Modifier.size(20.dp)
-//                )
-//            }
-//        }
-
-        Box(
+        // سه نقطه کوچک هنگام تکمیل تبدیل
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 160.dp)
-                .width(200.dp)
-                .height(54.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0x663A1700), // تیره‌تر
-                            Color(0x55200000)
-                        )
-                    )
-                )
-                // ← بوردر رو حذف کردیم، جاش graphicsLayer با shadow
+                .navigationBarsPadding()
+                .padding(bottom = 28.dp)
+                .zIndex(4f)
                 .graphicsLayer {
-                    shadowElevation = 24f
-                    shape = RoundedCornerShape(28.dp)
-                    clip = true
-                    ambientShadowColor = Color(
-                        android.graphics.Color.argb(180, 255, 100, 0)
-                    )
-
-                    spotShadowColor = Color(
-                        android.graphics.Color.argb(200, 255, 60, 0)
-                    )
-                }
-                .clickable {
-                    navController.navigate(NavGraph.Screen.AddRecipe.route)
-                },
-            contentAlignment = Alignment.Center
+                    alpha = cardToHeaderProgress                },
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(1f, 0.5f, 0.1f, 0.2f),
-                                Color.Transparent
-                            ),
-                            radius = 300f
+            repeat(3) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(if (index == 1) 7.dp else 5.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Color(0xFFFF7043).copy(
+                                alpha = if (index == 1) 0.9f else 0.35f
+                            )
                         )
-                    )
-            )
+                )
+            }
+        }
+    }
+}
 
-            AppText(
-                text = "افزودن دستور",
-                style = TextStyle(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFFFF8C6),
-                            Color(0xFFFFD56A),
-                            Color(0xFFFFF1A8)
+// ─── کارت نارنجی مات با انیمیشن پرتاب ───────────────────
+@Composable
+private fun OvenGlassCard(
+    item: CategoryWithCount,
+    state: CardAnimState,
+    density: androidx.compose.ui.unit.Density,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val pressScale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = tween(80),
+        label = "cardPress"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                translationY = state.translationY.value
+
+                scaleX = state.scale.value * pressScale
+
+                scaleY = state.scale.value * pressScale
+
+                alpha = state.alpha.value
+                alpha = state.alpha.value
+                shadowElevation = 16f
+                shape = RoundedCornerShape(18.dp)
+                clip = true
+                ambientShadowColor = Color(0xFF8B3A00).copy(alpha = 0.4f)
+                spotShadowColor = Color(0xFF8B3A00).copy(alpha = 0.4f)
+            }
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFFFE39A).copy(alpha = 0.65f),
+                        Color(0xFFFFB347).copy(alpha = 0.55f),
+                        Color(0xFFFF7A00).copy(alpha = 0.42f)
+                    )
+                ),
+                shape = RoundedCornerShape(18.dp)
+            )
+            .drawWithContent {
+
+                drawContent()
+
+                drawRoundRect(
+                    brush = Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.18f),
+                            Color.Transparent
                         )
                     ),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = Vazirmatn,
-                    // ← سایه پشت متن برای خوانایی
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.8f),
-                        offset = Offset(0f, 2f),
-                        blurRadius = 12f
+                    cornerRadius = CornerRadius(36f)
+                )
+
+            }
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFFFF2C7).copy(alpha = 0.55f),
+                        Color(0xFFFFB35C).copy(alpha = 0.22f)
                     )
+                ),
+                shape = RoundedCornerShape(18.dp)
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFD56A).copy(alpha = 0.25f)),
+            contentAlignment = Alignment.Center
+        ) {
+            AppText(item.category.emoji, fontSize = 22.sp)
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            AppText(
+                text = item.category.name,
+                style = TextStyle(
+                    fontFamily = Vazirmatn,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF3E1F0A)
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            AppText(
+                text = "${item.recipeCount} دستور",
+                style = TextStyle(
+                    fontFamily = Vazirmatn,
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B3410)
                 )
             )
         }
+
+        Icon(
+            Icons.Default.ChevronLeft,
+            contentDescription = null,
+            tint = Color(0xFF3E1F0A),
+            modifier = Modifier.size(22.dp)
+        )
     }
 }

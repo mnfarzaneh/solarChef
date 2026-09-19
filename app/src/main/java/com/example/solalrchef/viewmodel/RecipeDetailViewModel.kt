@@ -36,8 +36,10 @@ class RecipeDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             // اول از RecipeRepository استاتیک چک کن
-            val found: Recipe? = RecipeRepository.recipes.firstOrNull { it.id == recipeId }
-                ?: userRepo.getRecipeById(recipeId)
+            val systemRecipe = RecipeRepository.recipes.firstOrNull { it.id == recipeId }
+            val found: Recipe? = systemRecipe?.copy(
+                isFavorite = userRepo.isSystemFavorite(recipeId)
+            ) ?: userRepo.getRecipeById(recipeId)
 
             if (found == null) {
                 _uiState.update { it.copy(isLoading = false, notFound = true) }
@@ -71,9 +73,13 @@ class RecipeDetailViewModel @Inject constructor(
         // آپدیت فوری UI
         _uiState.update { it.copy(isFavorite = newFav) }
 
-        // ذخیره در دیتابیس (فقط اگه user recipe باشه)
+        val isSystemRecipe = RecipeRepository.recipes.any { it.id == recipe.id }
         viewModelScope.launch {
-            userRepo.updateFavorite(recipe.id, newFav)
+            if (isSystemRecipe) {
+                userRepo.updateSystemFavorite(recipe.id, newFav)
+            } else {
+                userRepo.updateFavorite(recipe.id, newFav)
+            }
         }
     }
 

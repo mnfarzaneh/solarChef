@@ -1,5 +1,7 @@
 package com.mnfarzaneh.solalrchef.ui.navigation
 
+import android.net.Uri
+
 class NavGraph {
     sealed class Screen(val route: String) {
         data object Oven : Screen("oven")
@@ -21,6 +23,25 @@ class NavGraph {
         }
         data object Cooking : Screen("cooking/{recipeId}") {
             fun createRoute(recipeId: String) = "cooking/$recipeId"
+        }
+
+        // ← جدید: صفحات ورود و ثبت‌نام
+        data object Login : Screen("login")
+        data object Register : Screen("register")
+
+        // ← جدید: صفحه‌ی پروفایل + دکمه‌ی خروج
+        data object Profile : Screen("profile")
+
+        data object Article : Screen("article/{slug}") {
+            fun createRoute(slug: String) = "article/${Uri.encode(slug)}"
+            const val deepLink = "solarchef://article/{slug}"
+        }
+        data object Articles : Screen("articles")
+
+        // ← جدید: نمایش دستورهای داخل یه دسته‌بندی خاص
+        data object CategoryRecipes : Screen("category_recipes/{categoryId}/{categoryName}") {
+            fun createRoute(categoryId: String, categoryName: String) =
+                "category_recipes/$categoryId/${Uri.encode(categoryName)}"
         }
     }
 }

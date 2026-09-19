@@ -4,7 +4,20 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)               // ← اضافه شد
+    alias(libs.plugins.google.services)  // ← اضافه
+
 }
+
+val solarChefKeystorePath = providers.environmentVariable("SOLARCHEF_KEYSTORE_PATH")
+val solarChefStorePassword = providers.environmentVariable("SOLARCHEF_STORE_PASSWORD")
+val solarChefKeyAlias = providers.environmentVariable("SOLARCHEF_KEY_ALIAS")
+val solarChefKeyPassword = providers.environmentVariable("SOLARCHEF_KEY_PASSWORD")
+val solarChefReleaseSigningReady = listOf(
+    solarChefKeystorePath,
+    solarChefStorePassword,
+    solarChefKeyAlias,
+    solarChefKeyPassword
+).all { it.isPresent }
 
 android {
     namespace = "com.mnfarzaneh.solalrchef"
@@ -16,13 +29,27 @@ android {
         applicationId = "com.mnfarzaneh.solalrchef"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.1.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (solarChefReleaseSigningReady) {
+            create("release") {
+                storeFile = file(solarChefKeystorePath.get())
+                storePassword = solarChefStorePassword.get()
+                keyAlias = solarChefKeyAlias.get()
+                keyPassword = solarChefKeyPassword.get()
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (solarChefReleaseSigningReady) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -40,6 +67,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -63,6 +91,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.coil.compose)
+
+
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.work.compiler)
     // ── Hilt ─────────────────────────────────────────
     implementation(libs.hilt.android)                  // ← اضافه شد
     ksp(libs.hilt.compiler)                            // ← اضافه شد
@@ -74,6 +107,16 @@ dependencies {
 
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.haze)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
 
     // ── Test ─────────────────────────────────────────
     testImplementation(libs.junit)

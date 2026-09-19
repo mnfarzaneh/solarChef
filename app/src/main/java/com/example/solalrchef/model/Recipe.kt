@@ -16,6 +16,7 @@ data class Recipe(
     val description: String = "",
     val image: Int = 0,           // ← عکس روی سولاردام (آیکون کوچک)
     val imagePath: String = "",
+    val imageKey: String = "",
     val detailImage: Int = image,  // ← عکس صفحه جزئیات (بزرگ)
     val author: String = "سولارشف",
     val source: String = "درون برنامه",
@@ -28,6 +29,8 @@ data class Recipe(
     val isFavorite: Boolean = false,   // ← اضافه شد
     val ingredients: List<Ingredient> = emptyList(),
     val steps: List<CookingStep> = emptyList(),
-    val equipment: List<String> = emptyList()  // ← جدید
-
+    val equipment: List<String> = emptyList(),  // ← جدید
+    val categoryIds: List<String> = emptyList(),  // ← جدید: می‌تونه توی چند دسته باشه
+    val createdAt: Long = 0L,
+    val updatedAt: Long = createdAt
 )

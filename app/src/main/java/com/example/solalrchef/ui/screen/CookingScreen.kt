@@ -22,9 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -45,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -53,13 +53,18 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.mnfarzaneh.solalrchef.R
 import com.mnfarzaneh.solalrchef.model.Ingredient
-import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
+import com.mnfarzaneh.solalrchef.model.UnitCategory
+import com.mnfarzaneh.solalrchef.model.findUnit
+import com.mnfarzaneh.solalrchef.ui.components.IngredientCalculatorButton
+import com.mnfarzaneh.solalrchef.ui.components.IngredientCalculatorSheet
 import com.mnfarzaneh.solalrchef.ui.theme.AppText
 import com.mnfarzaneh.solalrchef.viewmodel.CookingViewModel
 import com.mnfarzaneh.solalrchef.ui.theme.GlassColors
 import com.mnfarzaneh.solalrchef.ui.theme.GlassIconButton
 import com.mnfarzaneh.solalrchef.ui.theme.GlassActionButton
+import kotlin.math.abs
 // ─── رنگ‌ها ───────────────────────────────────────────────
 
 
@@ -68,6 +73,9 @@ fun CookingScreen(
     recipeId: String,
     navController: NavController
 ) {
+    CookingModeScreen(recipeId = recipeId, navController = navController)
+    return
+
     val context = LocalContext.current
     val viewModel: CookingViewModel = hiltViewModel()
 
@@ -199,7 +207,7 @@ fun CookingScreen(
                         onClick  = { viewModel.selectTab(0) },
                         text = {
                             AppText(
-                                "مواد لازم",
+                                stringResource(R.string.recipe_ingredients),
                                 color = if (uiState.selectedTab == 0) GlassColors.AccentOrange else GlassColors.TextLight,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -210,7 +218,7 @@ fun CookingScreen(
                         onClick  = { viewModel.selectTab(1) },
                         text = {
                             AppText(
-                                "وسایل لازم",
+                                stringResource(R.string.recipe_equipment),
                                 color = if (uiState.selectedTab == 1) GlassColors.AccentOrange else GlassColors.TextLight,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -221,7 +229,7 @@ fun CookingScreen(
                         onClick  = { viewModel.selectTab(2) },
                         text = {
                             AppText(
-                                "دستور پخت",
+                                stringResource(R.string.cooking_tab_method),
                                 color = if (uiState.selectedTab == 2) GlassColors.AccentOrange else GlassColors.TextLight,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -237,7 +245,7 @@ fun CookingScreen(
                             ingredients = recipe.ingredients,
                             servingsMultiplier =
                                 uiState.servings.toFloat() /
-                                        (recipe.yield.toIntOrNull() ?: 4).toFloat()
+                                        (recipe.yield.toIntOrNull() ?: 1).toFloat()
                         )
                     }
 
@@ -269,30 +277,19 @@ fun CookingScreen(
         ) {
             GlassIconButton(
                 onClick = {
-                    navController.popBackStack(
-                        route = NavGraph.Screen.Home.route,
-                        inclusive = false
-                    )
+                    navController.popBackStack()
                 }
             ) {
-                Icon(Icons.Default.Close, contentDescription = "Close",
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back),
                     tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
             }
-//            GlassIconButton(
-//                onClick = {
-//                    navController.popBackStack()
-//                }
-//            ) {
-//                Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-//                    tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
-//            }
         }
 
         // ── ماشین حساب ───────────────────────────────────
         if (uiState.showCalculator) {
             IngredientCalculatorSheet(
                 ingredients = recipe.ingredients,
-                baseYield   = recipe.yield.toIntOrNull() ?: 4,
+                baseYield   = recipe.yield.toIntOrNull() ?: 1,
                 onDismiss   = { viewModel.hideCalculator() }
             )
         }
@@ -307,14 +304,14 @@ fun CkTitleSection(recipe: com.mnfarzaneh.solalrchef.model.Recipe) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        AppText("سطح: ${recipe.difficulty}",
+        AppText(stringResource(R.string.cooking_level, recipe.difficulty),
             color = GlassColors.AccentOrange, fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
         Spacer(modifier = Modifier.height(4.dp))
         AppText(recipe.title, color = GlassColors.TextDark, fontSize = 26.sp,
             fontWeight = FontWeight.Bold, lineHeight = 32.sp)
         Spacer(modifier = Modifier.height(4.dp))
-        AppText("دستور شخصی ${recipe.author}", color = GlassColors.TextLight, fontSize = 13.sp)
+        AppText(stringResource(R.string.cooking_personal_recipe, recipe.author), color = GlassColors.TextLight, fontSize = 13.sp)
         Spacer(modifier = Modifier.height(8.dp))
         CkRatingBar(rating = recipe.rating)
     }
@@ -344,8 +341,8 @@ fun CkStatsRow(recipe: com.mnfarzaneh.solalrchef.model.Recipe) {
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        CkStatCard("زمان کل",  recipe.totalTime, GlassColors.AccentOrange, Modifier.weight(1f))
-        CkStatCard("زمان پخت", recipe.cookTime,  GlassColors.AccentBlue,   Modifier.weight(1f))
+        CkStatCard(stringResource(R.string.recipe_total_time), recipe.totalTime, GlassColors.AccentOrange, Modifier.weight(1f))
+        CkStatCard(stringResource(R.string.recipe_cook_time), recipe.cookTime, GlassColors.AccentBlue, Modifier.weight(1f))
     }
 }
 
@@ -425,7 +422,7 @@ fun CkServingsRow(servings: Int, calories: Int, onMinus: () -> Unit, onPlus: () 
             Spacer(modifier = Modifier.width(8.dp))
 
             AppText(
-                "وعده",
+                stringResource(R.string.cooking_serving),
                 color = GlassColors.TextDark,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
@@ -433,8 +430,45 @@ fun CkServingsRow(servings: Int, calories: Int, onMinus: () -> Unit, onPlus: () 
         }
         Column(horizontalAlignment = Alignment.End) {
             AppText("$calories", color = GlassColors.TextDark, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            AppText("کیلو کالری در هر وعده", color = GlassColors.TextLight, fontSize = 11.sp)
+            AppText(stringResource(R.string.cooking_calories_per_serving), color = GlassColors.TextLight, fontSize = 11.sp)
         }
+    }
+}
+
+// ─── فرمت مقدار به‌صورت کسری برای واحدهای حجمی ─────────────
+// ← ۰.۶۶۷ پیمانه رو به‌جای «۰.۷» به‌صورت «⅔» نشون می‌ده.
+// فقط برای واحدهای حجمی (پیمانه، قاشق و...) فعاله؛ برای وزنی/شمارشی
+// (گرم، عدد) همون عدد اعشاری معمولی نشون داده می‌شه.
+private val commonFractions = listOf(
+    0.25f to "¼",
+    0.333f to "⅓",
+    0.5f to "½",
+    0.667f to "⅔",
+    0.75f to "¾"
+)
+
+private fun formatAsFraction(value: Float): String {
+    val whole = value.toInt()
+    val frac = value - whole
+
+    if (frac < 0.05f) return whole.toString().ifBlank { "0" }
+
+    val closest = commonFractions.minByOrNull { abs(it.first - frac) }
+    val isCloseEnough = closest != null && abs(closest.first - frac) < 0.06f
+
+    return when {
+        !isCloseEnough -> String.format("%.1f", value)
+        whole == 0 -> closest!!.second
+        else -> "$whole${closest!!.second}"
+    }
+}
+
+private fun formatIngredientAmount(rawAmount: String, unit: String, multiplier: Float): String {
+    val value = rawAmount.toFloatOrNull()?.let { it * multiplier } ?: return rawAmount
+    val isVolume = findUnit(unit)?.category == UnitCategory.VOLUME
+    return if (isVolume) formatAsFraction(value) else {
+        if (value == value.toLong().toFloat()) value.toLong().toString()
+        else String.format("%.1f", value)
     }
 }
 
@@ -442,9 +476,6 @@ fun CkServingsRow(servings: Int, calories: Int, onMinus: () -> Unit, onPlus: () 
 @Composable
 fun CkIngredientsSection(ingredients: List<Ingredient>, servingsMultiplier: Float) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
-//        AppText("مواد لازم", color = GlassColors.TextLight, fontSize = 11.sp,
-//            fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
-//            modifier = Modifier.padding(bottom = 12.dp))
         ingredients.forEach { ingredient ->
             Row(
                 modifier = Modifier
@@ -452,12 +483,11 @@ fun CkIngredientsSection(ingredients: List<Ingredient>, servingsMultiplier: Floa
                     .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ){
-                val adjusted = ingredient.amount.toFloatOrNull()
-                    ?.let { it * servingsMultiplier }
-                    ?.let {
-                        if (it == it.toLong().toFloat()) it.toLong().toString()
-                        else String.format("%.1f", it)
-                    } ?: ingredient.amount
+                val adjusted = formatIngredientAmount(
+                    rawAmount = ingredient.amount,
+                    unit = ingredient.unit,
+                    multiplier = servingsMultiplier
+                )
 
                 AppText(
                     ingredient.name,
@@ -487,10 +517,6 @@ fun CkStepsSection(
     onStepToggle: (Int) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
-//        AppText("DIRECTIONS", color = GlassColors.TextLight, fontSize = 11.sp,
-//            fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
-//            modifier = Modifier.padding(bottom = 12.dp))
-
         steps.forEachIndexed { index, step ->
             val bgColor by animateColorAsState(
                 targetValue = if (completedSteps.getOrElse(index) { false })

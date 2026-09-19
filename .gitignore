@@ -13,3 +13,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local tooling, configuration and generated releases
+.gradle-codex/
+.kotlin/
+.idea/
+**/build/
+app/release/
+*.apk
+*.aab
+*.jks
+*.keystore
+.env
+.env.*
+google-services.json

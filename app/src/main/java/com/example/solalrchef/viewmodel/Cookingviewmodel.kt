@@ -18,6 +18,7 @@ import javax.inject.Inject
 data class CookingUiState(
     val recipe: Recipe? = null,
     val isLoading: Boolean = true,
+    val currentStep: Int = 0,
     val selectedTab: Int = 0,
     val servings: Int = 4,
     val completedSteps: List<Boolean> = emptyList(),
@@ -64,15 +65,27 @@ class CookingViewModel @Inject constructor(
             it.copy(
                 recipe = recipe,
                 isLoading = false,
-                servings = recipe.yield.toIntOrNull() ?: 4,
+                servings = recipe.yield.toIntOrNull() ?: 1,
                 completedSteps = List(recipe.steps.size) { false }
             )
         }
     }
 
-    // ── تب ───────────────────────────────────────────────
+    fun previousStep() {
+        _uiState.update { it.copy(currentStep = (it.currentStep - 1).coerceAtLeast(0)) }
+    }
+
     fun selectTab(index: Int) {
         _uiState.update { it.copy(selectedTab = index) }
+    }
+
+    fun nextStep() {
+        val lastIndex = (_uiState.value.recipe?.steps?.lastIndex ?: 0).coerceAtLeast(0)
+        _uiState.update { state ->
+            val completed = state.completedSteps.toMutableList()
+            if (state.currentStep in completed.indices) completed[state.currentStep] = true
+            state.copy(currentStep = (state.currentStep + 1).coerceAtMost(lastIndex), completedSteps = completed)
+        }
     }
 
     // ── وعده ─────────────────────────────────────────────

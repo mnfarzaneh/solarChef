@@ -51,14 +51,24 @@ fun SolalrChefTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = GlassColors.AccentOrange,
+            secondary = GlassColors.AccentSecondary,
+            background = GlassColors.BgLight,
+            surface = GlassColors.GlassCard,
+            onBackground = GlassColors.TextDark,
+            onSurface = GlassColors.TextDark
+        )
+    } else {
+        lightColorScheme(
+            primary = GlassColors.AccentOrange,
+            secondary = GlassColors.AccentSecondary,
+            background = GlassColors.BgLight,
+            surface = GlassColors.GlassCard,
+            onBackground = GlassColors.TextDark,
+            onSurface = GlassColors.TextDark
+        )
     }
 
     MaterialTheme(

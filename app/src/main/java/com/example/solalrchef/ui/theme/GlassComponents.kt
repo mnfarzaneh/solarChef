@@ -4,9 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -19,8 +24,67 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
+
+/**
+ * هدر استاندارد تمام صفحات SolarChef. ارتفاع، فاصله از نوار وضعیت و محل دکمه
+ * در همه صفحات از همین کامپوننت کنترل می‌شود.
+ */
+@Composable
+fun SolarChefTopBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    navigationIcon: ImageVector? = null,
+    navigationDescription: String = "بازگشت",
+    onNavigationClick: (() -> Unit)? = null,
+    action: (@Composable () -> Unit)? = null
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(GlassColors.BgLight.copy(alpha = 0.96f))
+            .statusBarsPadding()
+            .height(64.dp)
+            .padding(horizontal = 16.dp)
+    ) {
+        if (navigationIcon != null && onNavigationClick != null) {
+            GlassIconButton(
+                onClick = onNavigationClick,
+                modifier = Modifier.align(Alignment.CenterStart),
+                size = 44.dp
+            ) {
+                Icon(
+                    imageVector = navigationIcon,
+                    contentDescription = navigationDescription,
+                    tint = GlassColors.TextDark,
+                    modifier = Modifier.size(21.dp)
+                )
+            }
+        }
+
+        AppText(
+            text = title,
+            color = GlassColors.TextDark,
+            fontSize = 19.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 56.dp)
+        )
+
+        if (action != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(44.dp),
+                contentAlignment = Alignment.Center
+            ) { action() }
+        }
+    }
+}
 
 // ─── دکمه‌ی گرد شیشه‌ای (آیکون تنها) ──────────────────────
 // اگه hazeState داده بشه، بلور واقعی نشون میده؛ وگرنه رنگ نیمه‌شفاف ساده (fallback قدیمی)
@@ -68,7 +132,7 @@ fun GlassActionButton(
             .clip(RoundedCornerShape(14.dp))
             .background(
                 if (isPrimary)
-                    Brush.linearGradient(listOf(GlassColors.AccentOrange, Color(0xFFFF8C42)))
+                    Brush.linearGradient(listOf(GlassColors.AccentOrange, GlassColors.AccentSecondary))
                 else
                     Brush.linearGradient(listOf(GlassColors.GlassCard, GlassColors.GlassCard))
             )

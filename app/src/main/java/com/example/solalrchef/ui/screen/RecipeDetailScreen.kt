@@ -1,6 +1,7 @@
 package com.mnfarzaneh.solalrchef.ui.screen
 
 import android.content.Intent
+import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -8,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,16 +21,16 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -48,6 +50,11 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +66,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,7 +75,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.mnfarzaneh.solalrchef.R
 import com.mnfarzaneh.solalrchef.model.Recipe
+import com.mnfarzaneh.solalrchef.ui.components.IngredientCalculatorSheet
+import com.mnfarzaneh.solalrchef.ui.components.IngredientCalculatorButton
 import com.mnfarzaneh.solalrchef.ui.navigation.NavGraph
 import com.mnfarzaneh.solalrchef.ui.theme.AppText
 import com.mnfarzaneh.solalrchef.ui.theme.GlassColors
@@ -105,9 +116,12 @@ fun RecipeDetailScreen(
 
     val recipe = uiState.recipe!!
     val scrollState = rememberScrollState()
-    val heroHeight = 320
+    val density = LocalDensity.current
+    val titleRevealThreshold = remember(density) {
+        with(density) { 285.dp.roundToPx() }
+    }
     val scrolledPastHero by remember {
-        derivedStateOf { scrollState.value > heroHeight * 2 }
+        derivedStateOf { scrollState.value >= titleRevealThreshold }
     }
 
     Box(
@@ -133,8 +147,10 @@ fun RecipeDetailScreen(
             ) {
                 Column {
                     GlassTitleSection(recipe = recipe)
-                    GlassCalorieCard(recipe = recipe)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    if (recipe.calories > 0) {
+                        GlassCalorieCard(recipe = recipe)
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                     GlassMacroRow(recipe = recipe)
                     Spacer(modifier = Modifier.height(16.dp))
                     Divider(color = GlassColors.Divider, thickness = 1.dp,
@@ -153,13 +169,85 @@ fun RecipeDetailScreen(
                         recipe = recipe,
                         onClick = { viewModel.showShoppingList()}
                     )
-                    AppText(
-                        text = recipe.description,
-                        color = GlassColors.TextMid,
-                        fontSize = 15.sp,
-                        lineHeight = 24.sp,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
-                    )
+                    if (recipe.description.isNotBlank()) {
+                        RecipeDetailSection(title = stringResource(R.string.recipe_description)) {
+                            AppText(
+                                text = recipe.description,
+                                color = GlassColors.TextMid,
+                                fontSize = 15.sp,
+                                lineHeight = 24.sp
+                            )
+                        }
+                    }
+                    if (recipe.ingredients.isNotEmpty()) {
+                        RecipeDetailSection(title = stringResource(R.string.recipe_ingredients)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                IngredientCalculatorButton(onClick = { viewModel.toggleCalculator() })
+                            }
+                            recipe.ingredients.forEachIndexed { index, ingredient ->
+                                RecipeDetailListRow(
+                                    leading = ingredient.name,
+                                    trailing = listOf(ingredient.amount, ingredient.unit)
+                                        .filter { it.isNotBlank() }
+                                        .joinToString(" ")
+                                )
+                                if (index < recipe.ingredients.lastIndex) {
+                                    Divider(color = GlassColors.Divider, thickness = 0.5.dp)
+                                }
+                            }
+                        }
+                    }
+                    if (recipe.equipment.isNotEmpty()) {
+                        RecipeDetailSection(title = stringResource(R.string.recipe_equipment)) {
+                            recipe.equipment.forEach { item ->
+                                AppText(
+                                    text = "• $item",
+                                    color = GlassColors.TextDark,
+                                    fontSize = 15.sp,
+                                    lineHeight = 24.sp,
+                                    modifier = Modifier.padding(vertical = 5.dp)
+                                )
+                            }
+                        }
+                    }
+                    if (recipe.steps.isNotEmpty()) {
+                        RecipeDetailSection(title = stringResource(R.string.recipe_steps)) {
+                            recipe.steps.forEachIndexed { index, step ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 9.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape)
+                                            .background(GlassColors.AccentOrange.copy(alpha = 0.14f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        AppText(
+                                            text = (index + 1).toString(),
+                                            color = GlassColors.AccentOrange,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    AppText(
+                                        text = step.instruction,
+                                        color = GlassColors.TextDark,
+                                        fontSize = 15.sp,
+                                        lineHeight = 24.sp,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(80.dp))
                 }
             }
@@ -176,7 +264,7 @@ fun RecipeDetailScreen(
         if (uiState.showCalculator) {
             IngredientCalculatorSheet(
                 ingredients = recipe.ingredients,
-                baseYield   = recipe.yield.toIntOrNull() ?: 4,
+                baseYield   = recipe.yield.toIntOrNull() ?: 1,
                 onDismiss   = { viewModel.toggleCalculator() }
             )
         }
@@ -269,42 +357,43 @@ fun GlassTopBar(
     title: String,
     hazeState: HazeState   // ← پارامتر جدید
 ) {
+    val barBackground by animateColorAsState(
+        targetValue = if (scrolledPastHero) GlassColors.BgLight.copy(alpha = 0.98f) else Color.Transparent,
+        animationSpec = tween(durationMillis = 180),
+        label = "recipeTopBarBackground"
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 52.dp, start = 16.dp, end = 16.dp),
+            .background(barBackground)
+            .statusBarsPadding()
+            .height(64.dp)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         GlassIconButton(
             onClick = {
-                navController.popBackStack(
-                    route = NavGraph.Screen.Home.route,
-                    inclusive = false
-                )
+                navController.popBackStack()
             }
         ) {
-            Icon(Icons.Default.Close, contentDescription = "Close",
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back),
                 tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
         }
-        if (scrolledPastHero) {
+        AnimatedVisibility(
+            visible = scrolledPastHero,
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(120)),
+            modifier = Modifier.weight(1f)
+        ) {
             AppText(
                 text = title,
                 color = GlassColors.TextDark, fontSize = 16.sp, fontWeight = FontWeight.Bold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
             )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
         }
-
-//        GlassIconButton(
-//            onClick = { navController.popBackStack() },
-//            hazeState = hazeState   // ← اینجا هم
-//        ) {
-//            Icon(Icons.Default.ArrowBack, contentDescription = "Back",
-//                tint = GlassColors.TextDark, modifier = Modifier.size(20.dp))
-//        }
+        if (!scrolledPastHero) Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -331,7 +420,7 @@ fun GlassCalorieCard(recipe: Recipe) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        AppText(" ${recipe.calories} کیلو کالری", color = GlassColors.TextDark,
+        AppText(stringResource(R.string.recipe_kilocalories, recipe.calories), color = GlassColors.TextDark,
             fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         Box(
             modifier = Modifier.size(36.dp).clip(CircleShape)
@@ -343,13 +432,19 @@ fun GlassCalorieCard(recipe: Recipe) {
 
 @Composable
 fun GlassMacroRow(recipe: Recipe) {
+    val values = buildList {
+        if (recipe.totalTime.isNotBlank()) add(Triple(R.string.recipe_total_time, recipe.totalTime, GlassColors.AccentOrange))
+        if (recipe.cookTime.isNotBlank()) add(Triple(R.string.recipe_cook_time, recipe.cookTime, GlassColors.AccentBlue))
+        if (recipe.yield.isNotBlank()) add(Triple(R.string.recipe_output_count, recipe.yield, GlassColors.AccentGreen))
+    }
+    if (values.isEmpty()) return
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        GlassMacroCard("زمان کل",    recipe.totalTime, GlassColors.AccentOrange, Modifier.weight(1f))
-        GlassMacroCard("زمان پخت",   recipe.cookTime,  GlassColors.AccentBlue,   Modifier.weight(1f))
-        GlassMacroCard("تعداد خروجی", recipe.yield,    GlassColors.AccentGreen,  Modifier.weight(1f))
+        values.forEach { (label, value, color) ->
+            GlassMacroCard(stringResource(label), value, color, Modifier.weight(1f))
+        }
     }
 }
 
@@ -362,16 +457,47 @@ fun GlassMacroCard(label: String, value: String, color: Color, modifier: Modifie
         AppText(label, color = GlassColors.TextLight, fontSize = 10.sp, letterSpacing = 0.3.sp)
         Spacer(modifier = Modifier.height(4.dp))
         AppText(value, color = GlassColors.TextDark, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(6.dp))
-        Box(modifier = Modifier.fillMaxWidth().height(4.dp)
-            .clip(RoundedCornerShape(2.dp)).background(color.copy(alpha = 0.2f))) {
-            Box(modifier = Modifier.fillMaxWidth(0.7f).height(4.dp)
-                .clip(RoundedCornerShape(2.dp)).background(color))
+    }
+}
+
+@Composable
+private fun RecipeDetailSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(GlassColors.GlassCard)
+            .padding(16.dp)
+    ) {
+        AppText(
+            text = title,
+            color = GlassColors.AccentOrange,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(10.dp))
+        content()
+    }
+}
+
+@Composable
+private fun RecipeDetailListRow(leading: String, trailing: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AppText(leading, color = GlassColors.TextDark, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        if (trailing.isNotBlank()) {
+            AppText(trailing, color = GlassColors.AccentOrange, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
-private fun buildRecipeShareText(recipe: Recipe): String {
+private fun buildRecipeShareText(context: Context, recipe: Recipe): String {
     val ingredients = recipe.ingredients.joinToString("\n") {
         "• ${it.amount} ${it.unit} ${it.name}"
     }
@@ -383,23 +509,23 @@ private fun buildRecipeShareText(recipe: Recipe): String {
     return """
 🍽 ${recipe.title}
 
-📝 توضیحات:
+${context.getString(R.string.share_description_heading)}
 ${recipe.description}
 
-⏱ زمان کل: ${recipe.totalTime}
-🔥 زمان پخت: ${recipe.cookTime}
-👥 تعداد نفرات: ${recipe.yield}
+${context.getString(R.string.share_total_time, recipe.totalTime)}
+${context.getString(R.string.share_cook_time, recipe.cookTime)}
+${context.getString(R.string.share_servings, recipe.yield)}
 
-🥕 مواد لازم:
+${context.getString(R.string.share_ingredients_heading)}
 $ingredients
 
-👨‍🍳 طرز تهیه:
+${context.getString(R.string.share_method_heading)}
 $steps
 
-📱 ارسال شده از اپ Solar Chef
+${context.getString(R.string.share_sent_from_app)}
 
-✨ آموزش‌های کامل و نکات بیشتر:
-📷 اینستاگرام: @diy.by.farzaneh
+${context.getString(R.string.share_more_tutorials)}
+${context.getString(R.string.share_instagram)}
 https://www.instagram.com/diy.by.farzaneh?utm_source=qr
 
     """.trimIndent()
@@ -414,43 +540,46 @@ fun GlassActionRow(
 ) {
     val context = LocalContext.current
 
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         GlassActionButton(
             icon      = Icons.Default.MenuBook,
-            label     = "طرز تهیه",
-            modifier  = Modifier.weight(1f),
+            label     = stringResource(R.string.recipe_start_cooking),
+            modifier  = Modifier.fillMaxWidth(),
             isPrimary = true,
+            tint      = GlassColors.AccentOrange,
             onClick   = { navController.navigate(NavGraph.Screen.Cooking.createRoute(recipe.id)) }
         )
-        GlassActionButton(
-            icon      = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-            label     = if (isFavorite) "علاقه‌مندی" else "افزودن",
-            modifier  = Modifier.weight(1f),
-            isPrimary = false,
-            tint      = if (isFavorite) Color(0xFFE53935) else GlassColors.TextMid,
-            onClick   = onFavoriteClick
-        )
-        GlassActionButton(
-            icon    = Icons.Default.Share,
-            label   = "اشتراک‌گذاری",
-            modifier = Modifier.weight(1f),
-            isPrimary = false,
-            onClick = {
-                val sendIntent = Intent().apply {
-                    action = Intent.ACTION_SEND
-                    putExtra(
-                        Intent.EXTRA_TEXT,
-                        buildRecipeShareText(recipe)
-                    )
-                    type = "text/plain"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            GlassActionButton(
+                icon      = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                label     = stringResource(if (isFavorite) R.string.recipe_favorite else R.string.recipe_add_favorite),
+                modifier  = Modifier.weight(1f),
+                isPrimary = false,
+                tint      = if (isFavorite) Color(0xFFE53935) else GlassColors.TextMid,
+                onClick   = onFavoriteClick
+            )
+            GlassActionButton(
+                icon    = Icons.Default.Share,
+                label   = stringResource(R.string.action_share),
+                modifier = Modifier.weight(1f),
+                isPrimary = false,
+                onClick = {
+                    val sendIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, buildRecipeShareText(context, recipe))
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(sendIntent, context.getString(R.string.recipe_share_chooser)))
                 }
-                context.startActivity(Intent.createChooser(sendIntent, "اشتراک‌گذاری دستور پخت"))
-            }
-        )
+            )
+        }
     }
 }
 
@@ -492,7 +621,7 @@ fun GlassStoryCard(
 
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                AppText("لیست خرید", color = GlassColors.AccentOrange, fontSize = 11.sp,
+                AppText(stringResource(R.string.shopping_list), color = GlassColors.AccentOrange, fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp)
                 Spacer(modifier = Modifier.height(2.dp))
                 AppText(recipe.title, color = GlassColors.TextDark, fontSize = 14.sp,
@@ -506,6 +635,7 @@ fun GlassStoryCard(
 }
 
 private fun buildShoppingListText(
+    context: Context,
     recipe: Recipe,
     selectedIngredients: List<String>,
     selectedEquipment: List<String>
@@ -513,14 +643,14 @@ private fun buildShoppingListText(
 
     return buildString {
 
-        appendLine("🛒 لیست خرید")
+        appendLine(context.getString(R.string.shopping_list_share_title))
         appendLine()
         appendLine(recipe.title)
         appendLine()
 
         if (selectedIngredients.isNotEmpty()) {
 
-            appendLine("مواد لازم:")
+            appendLine(context.getString(R.string.shopping_ingredients_heading))
 
             selectedIngredients.forEach {
                 appendLine("• $it")
@@ -531,7 +661,7 @@ private fun buildShoppingListText(
 
         if (selectedEquipment.isNotEmpty()) {
 
-            appendLine("وسایل مورد نیاز:")
+            appendLine(context.getString(R.string.shopping_equipment_heading))
 
             selectedEquipment.forEach {
                 appendLine("• $it")
@@ -539,8 +669,8 @@ private fun buildShoppingListText(
         }
 
         appendLine()
-        appendLine("🍳 ارسال شده از Solar Chef")
-        appendLine("📸 آموزش‌های بیشتر:")
+        appendLine(context.getString(R.string.shopping_sent_from))
+        appendLine(context.getString(R.string.shopping_more_tutorials))
         appendLine("https://www.instagram.com/diy.by.farzaneh?utm_source=qr")    }
 }
 
@@ -589,14 +719,14 @@ fun ShoppingListSheet(
         ) {
 
             AppText(
-                text = "لیست خرید",
+                text = stringResource(R.string.shopping_list),
                 style = MaterialTheme.typography.titleLarge
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             AppText(
-                text = "موادی که ندارید را انتخاب کنید"
+                text = stringResource(R.string.shopping_list_hint)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -649,7 +779,7 @@ fun ShoppingListSheet(
             Spacer(modifier = Modifier.height(24.dp))
 
             AppText(
-                text = "وسایل مورد نیاز"
+                text = stringResource(R.string.shopping_equipment)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -711,11 +841,12 @@ fun ShoppingListSheet(
 
                 GlassActionButton(
                     icon = Icons.Default.ContentCopy,
-                    label = "کپی",
+                    label = stringResource(R.string.action_copy),
                     modifier = Modifier.weight(1f),
                     onClick = {
 
                         val text = buildShoppingListText(
+                            context = context,
                             recipe = recipe,
                             selectedIngredients = selectedIngredientNames,
                             selectedEquipment = selectedEquipmentNames
@@ -729,12 +860,13 @@ fun ShoppingListSheet(
 
                 GlassActionButton(
                     icon = Icons.Default.Share,
-                    label = "اشتراک ",
+                    label = stringResource(R.string.shopping_share),
                     modifier = Modifier.weight(1f),
                     isPrimary = true,
                     onClick = {
 
                         val text = buildShoppingListText(
+                            context = context,
                             recipe = recipe,
                             selectedIngredients = selectedIngredientNames,
                             selectedEquipment = selectedEquipmentNames
@@ -749,7 +881,7 @@ fun ShoppingListSheet(
                         context.startActivity(
                             Intent.createChooser(
                                 intent,
-                                "اشتراک‌گذاری لیست خرید"
+                                context.getString(R.string.shopping_share_chooser)
                             )
                         )
                     }

@@ -13,8 +13,9 @@ fun RecipeEntity.toRecipe(): Recipe {
         id           = id,
         title        = title,
         description  = description,
-        image        = 0,              // عکس از مسیر فایل لود میشه
+        image        = 0,
         imagePath    = imagePath,
+        imageKey     = imageKey,
         author       = author,
         source       = source,
         totalTime    = totalTime,
@@ -23,27 +24,14 @@ fun RecipeEntity.toRecipe(): Recipe {
         calories     = calories,
         difficulty   = difficulty,
         rating       = rating,
-        isFavorite       = isFavorite,   // ← این خط اضافه شد
-        ingredients  = parseIngredients(ingredientsJson),
-        steps        = parseSteps(stepsJson),
-        equipment    = parseEquipment(equipmentJson)
-
-
+        isFavorite   = isFavorite,
+        ingredients  = parseIngredientsPublic(ingredientsJson),
+        steps        = parseStepsPublic(stepsJson),
+        equipment    = parseEquipmentPublic(equipmentJson),
+        categoryIds  = parseCategoryIds(categoryIdsJson),
+        createdAt    = createdAt,
+        updatedAt    = updatedAt
     )
-}
-
-private fun equipmentToJson(equipment: List<String>): String {
-    val array = JSONArray()
-    equipment.forEach { array.put(it) }
-    return array.toString()
-}
-
-private fun parseEquipment(json: String): List<String> {
-    if (json.isEmpty()) return emptyList()
-    return try {
-        val array = JSONArray(json)
-        (0 until array.length()).map { array.getString(it) }
-    } catch (e: Exception) { emptyList() }
 }
 
 fun Recipe.toEntity(): RecipeEntity {
@@ -52,6 +40,7 @@ fun Recipe.toEntity(): RecipeEntity {
         title            = title,
         description      = description,
         imagePath        = imagePath ?: "",
+        imageKey         = imageKey,
         author           = author,
         source           = source,
         totalTime        = totalTime,
@@ -60,16 +49,20 @@ fun Recipe.toEntity(): RecipeEntity {
         calories         = calories,
         difficulty       = difficulty,
         rating           = rating,
-        isFavorite       = isFavorite,   // ← این خط اضافه شد
-        ingredientsJson  = ingredientsToJson(ingredients),
-        stepsJson        = stepsToJson(steps),
-        equipmentJson    = equipmentToJson(equipment)
+        isFavorite       = isFavorite,
+        ingredientsJson  = ingredientsToJsonPublic(ingredients),
+        stepsJson        = stepsToJsonPublic(steps),
+        equipmentJson    = equipmentToJsonPublic(equipment),
+        categoryIdsJson  = categoryIdsToJson(categoryIds),
+        ownerId          = null,
+        createdAt        = createdAt,
+        updatedAt        = updatedAt
     )
 }
 
-// ─── JSON helpers ─────────────────────────────────────────
+// ─── توابع عمومی (public) برای استفاده در SolarChefApiRepository ──
 
-private fun ingredientsToJson(ingredients: List<Ingredient>): String {
+fun ingredientsToJsonPublic(ingredients: List<Ingredient>): String {
     val array = JSONArray()
     ingredients.forEach { ing ->
         val obj = JSONObject()
@@ -81,30 +74,28 @@ private fun ingredientsToJson(ingredients: List<Ingredient>): String {
     return array.toString()
 }
 
-private fun parseIngredients(json: String): List<Ingredient> {
+fun parseIngredientsPublic(json: String): List<Ingredient> {
     if (json.isEmpty()) return emptyList()
     return try {
         val array = JSONArray(json)
         (0 until array.length()).map { i ->
             val obj = array.getJSONObject(i)
             Ingredient(
-                amount = obj.getString("amount"),
-                unit   = obj.getString("unit"),
-                name   = obj.getString("name")
+                amount = obj.optString("amount", ""),
+                unit   = obj.optString("unit", ""),
+                name   = obj.optString("name", "")
             )
         }
     } catch (e: Exception) { emptyList() }
 }
 
-private fun stepsToJson(steps: List<CookingStep>): String {
+fun stepsToJsonPublic(steps: List<CookingStep>): String {
     val array = JSONArray()
-    steps.forEach { step ->
-        array.put(step.instruction)
-    }
+    steps.forEach { array.put(it.instruction) }
     return array.toString()
 }
 
-private fun parseSteps(json: String): List<CookingStep> {
+fun parseStepsPublic(json: String): List<CookingStep> {
     if (json.isEmpty()) return emptyList()
     return try {
         val array = JSONArray(json)
@@ -114,4 +105,30 @@ private fun parseSteps(json: String): List<CookingStep> {
     } catch (e: Exception) { emptyList() }
 }
 
+fun equipmentToJsonPublic(equipment: List<String>): String {
+    val array = JSONArray()
+    equipment.forEach { array.put(it) }
+    return array.toString()
+}
 
+fun parseEquipmentPublic(json: String): List<String> {
+    if (json.isEmpty()) return emptyList()
+    return try {
+        val array = JSONArray(json)
+        (0 until array.length()).map { array.getString(it) }
+    } catch (e: Exception) { emptyList() }
+}
+
+fun categoryIdsToJson(ids: List<String>): String {
+    val array = JSONArray()
+    ids.forEach { array.put(it) }
+    return array.toString()
+}
+
+fun parseCategoryIds(json: String): List<String> {
+    if (json.isEmpty()) return emptyList()
+    return try {
+        val array = JSONArray(json)
+        (0 until array.length()).map { array.getString(it) }
+    } catch (e: Exception) { emptyList() }
+}
